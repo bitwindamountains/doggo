@@ -43,6 +43,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   plugins: [
     'expo-router',
+    'expo-status-bar',
     [
       'expo-splash-screen',
       { image: './assets/images/splash-icon.png', imageWidth: 200, backgroundColor: '#FFF7EC' },
