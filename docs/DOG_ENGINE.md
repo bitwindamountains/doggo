@@ -309,3 +309,43 @@ simulator steps `now` every 10 minutes and prints a timeline:
 
 Property tests: contentment always within 20–100; bond, goodDaysTotal, walksTotal, tricks
 never decrease; pushes per day ≤ budget for random fuzzed days.
+
+## 13. Implementation decisions (M1)
+
+Where this spec was silent or ambiguous, the engine does the following. Tests pin each one.
+
+- **Signatures.** `finalizeDay(summary, dog, ledger, prefs)` takes `prefs` (good-day criteria
+  depend on what is available). `newDayLedger(day, previous)` starts a day and carries
+  `ignoredStreakDays`. "Ignored" is judged at finalization from `openedCount`; the data layer
+  counts an open only within 60 minutes of the push.
+- **Extra fields.** `TodayData.screenRungAt` (when the current rung fired, so a later walk
+  acknowledges it), `DaySummary.pets` and `DaySummary.stepTarget` (needed at finalization),
+  `EngineInput.reduceMotion`. `EngineOutput` also returns `activeRequests`, `newWalks`,
+  `stepsToday`, `stepTarget` and `askNudgeFrequency`. `RenderProps.tailRightBias` is for the
+  placeholder renderer; Rive derives it from `bond`.
+- **Bond timing.** Daily points are committed at finalization. Until then the bond shown adds
+  today's walk/pet/check-in points on top of `dog.bondPoints`, so petting shows at once.
+  `walksTotal` and `goodDaysTotal` also update at finalization.
+- **Walk detection.** Overlapping qualifying windows merge into one run. A run that overlaps
+  an existing walk is the same walk, so a walk still in progress is not logged twice; its
+  stored end/steps are what was known when it was first detected.
+- **Step target ramp.** "Last week's target" = the target computed from history entries 8–14.
+  If those have no baseline (fewer than 3 days), no ramp cap applies.
+- **Play bow.** `lastPlayBowAt` = when the user last answered a play bow ("Stretch"). The
+  sitting spell is replayed over the day's buckets with hysteresis: starts below 50 steps in
+  the last hour, ends at 150 or when answered; a new spell needs 90 minutes after an answer.
+- **Water bowl.** `bowlLevel = clamp((water + 1) / (expected + 1), 0, 1)` instead of
+  `water / max(1, expected)`: the plain formula shows an empty bowl the moment the user wakes
+  up, which reads as neglect. The request thresholds (< 0.5, ≥ 2 expected, 2 h since last
+  glass) are unchanged.
+- **Line priority.** asleep → `sleeping`; greeting big/small → `greetBig`/`greetSmall`;
+  request → request; low mood today → `headRest`; rung 1 → `rung1`; else the pose.
+  Push copy keys are `push.${type}.${variant}`; counts live in `PUSH_VARIANTS`.
+- **Nudge planning.** The plan contains requests active now plus two foreseeable ones:
+  bedtime (bedTime − 30 min) and the leash at walk-check time if the user would still be
+  behind with no more steps (cancelled by a later recompute if they walk). Types are placed
+  in priority order; a nudge blocked by spacing, quiet hours or wake + 30 min may wait, up to:
+  leash → bedTime − 60 min, ball/bored → 3 h, playBow → 30 min, bedtime → bedTime.
+- **Simulator.** `src/engine/sim/` holds the personas and a pure `simulate()`; it delivers a
+  planned nudge when it falls before the next 10-minute tick and treats every tick as an
+  open (greetings only show on the first tick, from `lastOpenedDaysAgo`).

@@ -18,13 +18,13 @@ are equally important.
 | `docs/DOG_ENGINE.md` | The dog's brain: types, rules, numbers, test scenarios |
 | `docs/MILESTONES.md` | Ordered build plan with tasks and definitions of done |
 
-Work through `docs/MILESTONES.md` in order. At the start of a session, find the first
+Read `PROGRESS.md` first for current status. Work through `docs/MILESTONES.md` in order. At the start of a session, find the first
 unchecked task, read the docs it references, then build it. Tick tasks off when their
 definition of done is met.
 
 ## Stack (summary)
 
-- React Native + Expo (latest stable SDK), TypeScript strict, Expo Router, Expo dev client
+- React Native + Expo (SDK 57 as of M0), TypeScript strict, Expo Router, Expo dev client
   (NOT Expo Go: native modules are required), EAS Build.
 - iOS Screen Time: `react-native-device-activity` (config plugin generates extensions).
 - Android app usage: local Expo module in Kotlin (`modules/android-usage-stats`).
@@ -46,7 +46,8 @@ npx expo run:android             # local native build (needs Android Studio)
 npm test                         # Jest (engine tests must always pass)
 npm run typecheck                # tsc --noEmit
 npm run lint
-npm run simulate -- --persona=desk-worker   # print a simulated dog day (see DOG_ENGINE.md)
+npm run simulate -- --persona=desk-worker   # simulated dog day; --persona=all, --days=N, --all
+npm run test:coverage            # engine coverage threshold is enforced (CI runs this)
 eas build --profile development --platform all
 ```
 
@@ -94,6 +95,13 @@ eas build --profile development --platform all
 8. **Real devices.** Screen Time, HealthKit, Health Connect and usage stats do not work
    fully in simulators/emulators. Use the mock services in simulators and tell the human
    which steps need a physical device.
+
+## Session workflow
+
+- After each major change update `PROGRESS.md` (status, next steps) and tick
+  `docs/MILESTONES.md`. Update this file only for lasting conventions or commands.
+- Engine decisions not in the spec go in `docs/DOG_ENGINE.md` §13.
+- `dog-years-blueprint/` is the original blueprint, kept for reference; `docs/` is live.
 
 ## Code style
 

@@ -35,15 +35,15 @@ the iOS simulator and Android emulator showing a placeholder home screen.
 
 ## M1 — Dog engine (pure TypeScript)
 
-- [ ] `types.ts` and `constants.ts` (all numbers from DOG_ENGINE.md).
-- [ ] `time.ts`: user-day boundaries from wake time, night-shift support, weekend schedule,
+- [x] `types.ts` and `constants.ts` (all numbers from DOG_ENGINE.md).
+- [x] `time.ts`: user-day boundaries from wake time, night-shift support, weekend schedule,
       `wakingFraction`, quiet-hours check. Use `date-fns` + `date-fns-tz`.
-- [ ] `activityCurve.ts` (§4), `targets.ts` + `walks.ts` (§5), `requests.ts` (§6),
+- [x] `activityCurve.ts` (§4), `targets.ts` + `walks.ts` (§5), `requests.ts` (§6),
       `greetings.ts` + contentment + pose (§7), `bond.ts`, `growth.ts`, `goodDay.ts` (§8),
       `nudges.ts` (§9), copy key selection (§10), `renderProps.ts` (§11).
-- [ ] `computeDog.ts` and `finalizeDay.ts` entry points.
-- [ ] Persona fixtures and Jest tests for every row of DOG_ENGINE §12, plus property tests.
-- [ ] `scripts/simulate.ts` and `npm run simulate -- --persona=<name>` printing timelines.
+- [x] `computeDog.ts` and `finalizeDay.ts` entry points.
+- [x] Persona fixtures and Jest tests for every row of DOG_ENGINE §12, plus property tests.
+- [x] `scripts/simulate.ts` and `npm run simulate -- --persona=<name>` printing timelines.
 
 **DoD:** all persona and property tests pass; engine coverage ≥ 90%; lint proves the engine
 imports nothing from React/Expo/data/services.
@@ -69,7 +69,7 @@ imports nothing from React/Expo/data/services.
 - [ ] Walk screen (manual walk), mood check-in with 1-minute breathing (F9), Support screen
       with remote-config resource list (numbers marked "verify before launch").
 - [ ] Progress (F10) with no streak counters; Settings (F13); "Your data" screen.
-- [ ] `src/copy/en.ts` with all keys from DOG_ENGINE §10 and the copy-rules test (PRD §7).
+- [x] `src/copy/en.ts` with all keys from DOG_ENGINE §10 and the copy-rules test (PRD §7).
 - [ ] Accessibility labels for every dog state; reduce-motion support.
 
 **DoD:** the whole app is usable in simulators with mock data for every persona; copy test
