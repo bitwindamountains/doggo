@@ -1,0 +1,9 @@
+node_modules
+coverage
+dist
+.expo
+ios
+android
+dog-years-blueprint
+docs
+*.md

@@ -1,0 +1,23 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "types": ["jest"],
+    "paths": {
+      "@/engine": ["./src/engine"],
+      "@/engine/*": ["./src/engine/*"],
+      "@/data/*": ["./src/data/*"],
+      "@/services/*": ["./src/services/*"],
+      "@/features/*": ["./src/features/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/copy": ["./src/copy"],
+      "@/copy/*": ["./src/copy/*"],
+      "@/config/*": ["./src/config/*"],
+      "@/store/*": ["./src/store/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
+  "exclude": ["node_modules", "dog-years-blueprint"]
+}
