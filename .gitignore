@@ -45,3 +45,13 @@ coverage/
 
 # env
 .env
+
+# Keep secrets and local files out of the public repo
+.env.*
+!.env.example
+!.env.*.example
+*.pfx
+secrets/
+.claude/settings.local.json
+*.log
+Thumbs.db
