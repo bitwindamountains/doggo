@@ -420,8 +420,11 @@ change.**
 | `trickId` + `doTrick` | number + trigger | 1 sit, 2 paw, 3 spin, 4 rollOver, 5 highFive, 6 bow, 7 fetch, 8 dance |
 
 Art rules: inner-brow raise is the "asking" face; never tears, injuries or thin bodies.
-Until the `.riv` arrives, `PlaceholderDog` (react-native-svg shapes + a text label of the
-pose/request) implements the same `RenderProps`.
+Until the `.riv` arrives, `PlaceholderDog` implements the same `RenderProps` with Microsoft
+Fluent Emoji 3D art (MIT, `assets/images/dog/LICENSE.md`, credited on "Your data"): a dog
+(guide dog with harness for the leash request), props (ball, teddy, bed), the face on the
+pillow with eyes closed when asleep, transform-based motion, and a text label of the
+pose/request. It has one dog illustration for every breed.
 
 ## 8. Configuration and secrets
 

@@ -29,6 +29,7 @@ export function DataScreen() {
     <Screen title={t('ui.data.title')}>
       <Text style={styles.body}>{t('ui.data.onPhone')}</Text>
       <Text style={styles.body}>{t('ui.data.synced')}</Text>
+      <Text style={styles.credit}>{t('ui.data.credits')}</Text>
       {confirming ? (
         <>
           <Text style={styles.body}>{t('ui.data.confirm')}</Text>
@@ -48,4 +49,5 @@ export function DataScreen() {
 
 const styles = StyleSheet.create({
   body: { fontSize: 16, color: colors.ink, lineHeight: 22 },
+  credit: { fontSize: 13, color: colors.inkSoft, lineHeight: 18 },
 });

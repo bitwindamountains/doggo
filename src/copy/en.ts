@@ -186,6 +186,8 @@ export const en = {
   'ui.data.onPhone':
     'On this phone only: your dog, steps, walks, water, mood check-ins and notes, and screen time.',
   'ui.data.synced': 'Nothing is synced. There is no account.',
+  'ui.data.credits':
+    'Dog illustrations: Microsoft Fluent Emoji, used under the MIT License (Copyright (c) Microsoft Corporation).',
   'ui.data.delete': 'Delete all data',
   'ui.data.confirm': 'This removes your dog and everything stored on this phone.',
   'ui.data.confirmYes': 'Delete everything',
