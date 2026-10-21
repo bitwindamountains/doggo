@@ -58,6 +58,24 @@ describe('refreshDog with mock services (PRD F4 AC)', () => {
     }
   });
 
+  it.each(Object.keys(PERSONAS) as (keyof typeof PERSONAS)[])(
+    '%s: never more pushes than the budget through the real pipeline',
+    async (id) => {
+      await setup(id, '00:00');
+      const notifications = services.notifications as MockNotificationService;
+      const budget = PERSONAS[id].prefs.nudgesPerDay;
+      for (let m = 0; m < 24 * 60; m += 30) {
+        const hh = String(Math.floor(m / 60)).padStart(2, '0');
+        const mm = String(m % 60).padStart(2, '0');
+        await at(`${hh}:${mm}`, false);
+        const sent = ledgerRepo.find(db, '2026-10-21')?.sentCount ?? 0;
+        const pending = notifications.scheduled.filter((n) => n.at.startsWith('2026-10-21')).length;
+        expect(sent).toBeLessThanOrEqual(budget);
+        expect(sent + pending).toBeLessThanOrEqual(3);
+      }
+    },
+  );
+
   it('returns null and clears the store before onboarding', async () => {
     db = await createTestDb();
     services = createMockServices(

@@ -10,6 +10,7 @@ import { useDraft, DEFAULT_DRAFT, isValidName, shiftTime } from '@/features/onbo
 import { WalkScreen } from '@/features/walk/WalkScreen';
 import { ProgressScreen } from '@/features/progress/ProgressScreen';
 import { DataScreen } from '@/features/settings/DataScreen';
+import type { MockNotificationService } from '@/services/notifications/mockNotifications';
 import { useDogStore } from '@/store/dogStore';
 
 import { renderWith, router, setClock } from './helpers';
@@ -44,6 +45,18 @@ describe('Home (PRD F2, F4, F8)', () => {
     expect(await screen.findByText('Goodnight')).toBeTruthy();
     expect(screen.getByLabelText('Biscuit is asleep')).toBeTruthy();
     expect(screen.queryByText('Start walk')).toBeNull();
+  });
+});
+
+describe('Nudge responses (M5)', () => {
+  it('a tap on a leash nudge opens the walk screen', async () => {
+    const { services } = await renderWith(<HomeScreen />, { at: '14:30' });
+    (services.notifications as MockNotificationService).respond({
+      type: 'leash',
+      action: 'open',
+      deepLink: 'dogyears://walk',
+    });
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/walk'));
   });
 });
 

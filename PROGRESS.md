@@ -65,13 +65,20 @@ idempotent), `recompute()` (what the app runs on every foreground) and `deleteAl
   `src/config/supportResources.ts` (all marked `verifyBeforeLaunch`).
 - Settings quiet hours is a single "quiet at lunch" preset for now (shortcut).
 
+**M5 — notifications (code) done; shared ledger mirror waits for M6/M7.** Real
+`expo-notifications` service in app builds (other services stay mocked), response handling
+with opened tracking and action buttons, `dogyears://home` route. A test runs every persona
+through the real pipeline every 30 minutes and proves pushes never exceed the budget.
+**[HUMAN]** confirm delivery, action buttons and deep links on both devices.
+
 ## Next
 
-1. M4 (steps) needs HealthKit / Health Connect libraries and physical devices.
-2. M5 notifications: `expo-notifications` implementation of `NotificationService`, deep
-   links, opened-notification tracking.
-3. Run a dev build (`npx expo run:android` / `run:ios`) and walk through every persona via
-   Settings → Developer.
+1. M4 (steps): HealthKit + Health Connect implementations of `HealthService`; needs the
+   libraries' READMEs and physical devices to finish.
+2. M6/M7: Screen Time (needs the Apple entitlement) and the Android usage-stats module
+   (Kotlin), plus the shared nudge ledger mirror for their background producers.
+3. M8 needs the `.riv` file; M9 needs RevenueCat products and keys (human).
+4. M10 drafts: usage-description strings, privacy policy, store privacy answers.
 
 ## Notes
 

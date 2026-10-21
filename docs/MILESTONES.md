@@ -90,9 +90,9 @@ passes; screen reader reads the dog's state.
 
 ## M5 — Notifications and the nudge ledger
 
-- [ ] `expo-notifications` setup, categories with action buttons, Android channel.
-- [ ] Deep links (`dogyears://walk`, `dogyears://home?play=1`, ...) via Expo Router.
-- [ ] `NotificationService` applies `nudgePlan`: cancel and reschedule on each compute.
+- [x] `expo-notifications` setup, categories with action buttons, Android channel.
+- [x] Deep links (`dogyears://walk`, `dogyears://home?play=1`, ...) via Expo Router.
+- [x] `NotificationService` applies `nudgePlan`: cancel and reschedule on each compute.
 - [ ] Shared nudge ledger: App Group storage (iOS) / SharedPreferences (Android), mirrored
       to SQLite on open; opened-notification tracking; back-off + in-app frequency question.
 

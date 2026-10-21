@@ -44,6 +44,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: [
     'expo-router',
     'expo-status-bar',
+    'expo-sqlite',
+    // shortcut: no custom monochrome notification icon yet (Android falls back to the app
+    // icon); add a 96x96 white-on-transparent PNG as `icon` before release.
+    ['expo-notifications', { color: '#E07A3F' }],
     [
       'expo-splash-screen',
       { image: './assets/images/splash-icon.png', imageWidth: 200, backgroundColor: '#FFF7EC' },

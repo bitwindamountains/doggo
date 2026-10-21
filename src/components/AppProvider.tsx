@@ -1,6 +1,7 @@
 // App-wide wiring: opens the database, picks the services, and recomputes the dog whenever
 // the app becomes active (CLAUDE.md engineering rule 2). Tests pass `db` and `services`.
 
+import { router } from 'expo-router';
 import {
   createContext,
   useCallback,
@@ -14,7 +15,8 @@ import { AccessibilityInfo, AppState } from 'react-native';
 
 import { eventsRepo, migrate, type Db, type EventPayloads, type EventType } from '@/data';
 import { refreshDog } from '@/features/dog/refresh';
-import { createMockServices, type Services } from '@/services';
+import { handleNudgeResponse } from '@/features/dog/nudgeResponse';
+import { createAppServices, type Services } from '@/services';
 import { currentPersona, nowMs, useDevStore } from '@/store/dev';
 
 interface AppContextValue {
@@ -51,7 +53,11 @@ function defaultDb(): Db {
 
 export function AppProvider({ children, db: injectedDb, services: injectedServices }: Props) {
   const [db] = useState(() => injectedDb ?? defaultDb());
-  const [services] = useState(() => injectedServices ?? createMockServices(currentPersona, nowMs));
+  const [services] = useState(
+    () =>
+      injectedServices ??
+      createAppServices(currentPersona, nowMs, (ms) => ms - useDevStore.getState().offsetMs),
+  );
   const [ready, setReady] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
   const reduceMotionRef = useRef(false);
@@ -96,6 +102,17 @@ export function AppProvider({ children, db: injectedDb, services: injectedServic
       motion.remove();
     };
   }, [db, refresh]);
+
+  // Taps on nudges, including the one that launched the app.
+  useEffect(
+    () =>
+      services.notifications.onResponse((r) => {
+        const route = handleNudgeResponse(db, r, now());
+        refresh(true).catch((e: unknown) => console.error(e));
+        router.push(route as '/');
+      }),
+    [db, services, now, refresh],
+  );
 
   // Dev clock moved: recompute as if time passed. Subscribing (not an effect on `ready`)
   // keeps the start-up recompute's greeting from being overwritten.

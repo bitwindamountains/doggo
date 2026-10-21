@@ -245,6 +245,16 @@ fun getRungsReachedToday(): Int
   (side effects). Background producers (iOS extension, Android worker, HealthKit observer)
   consult the shared **nudge ledger** (App Group storage on iOS, SharedPreferences on
   Android, mirrored to SQLite on open) to respect the daily budget.
+- **As built (M5).** `src/services/notifications/expoNotifications.ts`: one Android channel
+  (`dog`), one category per nudge type with a single action button (PRD §7 rule 3), date
+  triggers, cancel-and-reschedule on every recompute. Taps (including the one that launched
+  the app) go through `handleNudgeResponse()`: `nudge_opened` event, ledger open count
+  (within 60 minutes), the action button answers the request (Stretch / Put phone down),
+  then navigation (`dogyears://walk` → `/walk`, `dogyears://home…` → `/`).
+  `SCHEDULE_EXACT_ALARM` is not requested (Play restricts it); **verify on a device** how
+  late a date trigger can arrive on Android 12+ with battery optimization.
+  Background producers (Screen Time extension, Android worker) still need the App Group /
+  SharedPreferences ledger mirror; it comes with their native code in M6/M7.
 
 ## 5. Local data model (SQLite via Drizzle)
 
