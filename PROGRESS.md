@@ -3,7 +3,7 @@
 Read this at the start of each session. The build plan and checkboxes live in
 `docs/MILESTONES.md`; this file is the short status and what to do next.
 
-## Status (2026-10-02)
+## Status (2026-10-21)
 
 **M0 — code tasks done.** Expo SDK 57 (React Native 0.86, React 19.2, TypeScript 6),
 Expo Router with routes in `app/` (placeholder screens), path aliases (`@/engine`, `@/copy`, …),
@@ -33,14 +33,88 @@ DOG_ENGINE.md §3–§11, with `computeDog()` and `finalizeDay()` as entry point
   depend on it. The copy-rules test enforces banned words, push bodies ≤ 60 characters, and
   that the keys match the engine.
 
+**M2 — local data layer done.** `src/data/`: Drizzle schema + first migration
+(`src/data/migrations/`), six repos, `buildEngineInput()`, `finalizePastDays()` (lazy,
+idempotent), `recompute()` (what the app runs on every foreground) and `deleteAllData()`.
+- Tests run the app's real migration bundle on an in-memory `better-sqlite3`
+  (`src/data/__tests__/testDb.ts`); both drivers are synchronous Drizzle SQLite, so repos
+  are plain sync functions. 333 tests pass.
+- Decisions not in the spec are in ARCHITECTURE §5 "As built (M2)": new event types
+  `ball_played` and `play_bow_answered`, the early-fire guard applied in the assembler,
+  walks the app never saw detected at finalization, backfill capped at 60 days.
+- Added `babel.config.js` (inline `.sql` imports) and `metro.config.js` (`sql` source ext)
+  as Drizzle's Expo driver needs. Not yet run in a dev build (`openDb()` in
+  `src/data/openDb.ts` is the only code that touches `expo-sqlite`).
+
+**M3 — app shell done (code).** Every screen is built on mock services:
+- `src/services/*`: Health, ScreenTime, Notifications, Purchases interfaces + mocks driven
+  by the engine personas; `useEntitlement('premium')` is the only Premium check.
+- `src/components/AppProvider.tsx` opens + migrates the DB, recomputes on `AppState` →
+  active and when the dev clock moves; `src/features/dog/refresh.ts` is the pipeline.
+- Screens: onboarding (welcome, adopt, name, schedule, permission primers), Home
+  (`PlaceholderDog` with RenderProps, room light by local time, bowl, request action,
+  4 quick actions, goodnight after bedtime, greeting/pet/celebrate bounces, back-off
+  question), Walk (manual, resumes after app kill), Check-in + 1-minute breathing,
+  Support (`src/config/supportResources.ts`), Progress (no streaks), Settings, Your data
+  (delete all), Paywall (mock), dev menu (persona + clock).
+- 470 tests pass, including screen tests for PRD F1–F4, F8–F10, F13 acceptance criteria.
+  `expo export` bundles both platforms. **Not verified on a simulator/device**: the DoD
+  "usable in simulators for every persona" needs a dev build (human, or a machine with
+  Xcode / Android Studio).
+- **[HUMAN] before launch:** call and confirm every number in
+  `src/config/supportResources.ts` (all marked `verifyBeforeLaunch`).
+
+**M5 — notifications (code) done; shared ledger mirror waits for M6/M7.** Real
+`expo-notifications` service in app builds (other services stay mocked), response handling
+with opened tracking and action buttons, `dogyears://home` route. A test runs every persona
+through the real pipeline every 30 minutes and proves pushes never exceed the budget.
+**[HUMAN]** confirm delivery, action buttons and deep links on both devices.
+
+**M4 — steps (code) done except the Android ≤ 13 Recording API fallback.** Real
+`HealthService` for iOS (HealthKit) and Android (Health Connect) on physical devices,
+persona mocks in simulators. Config plugins, entitlements and `READ_STEPS` verified with
+`expo config --type introspect`. **[HUMAN]** device check: totals within 5% of Apple Health
+/ Health Connect, leash on a low-step afternoon clears after a walk.
+
+**M10 drafts.** `docs/release/PRIVACY_POLICY_DRAFT.md` and
+`docs/release/STORE_PRIVACY_ANSWERS.md` (App Store label, Play Data safety, Health Connect
+declaration notes). **[HUMAN]** review, fill placeholders, publish the policy URL.
+
+**M6 — iOS Screen Time (JS side) done.** Authorization, Apple picker, daily monitoring with
+45/60/120-minute events, rungs read on open (see ARCHITECTURE §4.2 "As built"). Open: rung
+pushes from the extension (custom Swift reading the shared ledger) and the **[HUMAN]** device
+test. Set `APPLE_TEAM_ID` to enable the plugin; Family Controls works in local dev builds,
+TestFlight needs Apple's Distribution approval.
+
+**M9 — purchases (code) done.** `react-native-purchases` service (current offering's monthly /
+annual package, `premium` entitlement, restore), used when `REVENUECAT_IOS_KEY` /
+`REVENUECAT_ANDROID_KEY` are set; dev builds without keys use the mock, release builds
+without keys offer nothing (Premium can never be free by accident). Trial reminder: local
+notification 2 days before conversion at wake + 2 h, out of quiet hours, outside the nudge
+budget; nudge rescheduling no longer cancels it. Paywall has "Manage subscription" (store
+page). Gates: nothing to gate yet (one group, four launch breeds); new Premium features
+must check `useEntitlement('premium')`. **[HUMAN]** dashboard products, keys, sandbox tests.
+
+**Not buildable in the cloud session:** M7 (Kotlin module; no Android SDK here:
+dl.google.com is blocked). Build it on a machine with Android Studio.
+
+**UI and motion pass.** `PlaceholderDog` is now alive: breathing paced by energy, a tail
+that wags by contentment with a bond bias, an asking head tilt, breed ears and legs, drawn
+props (leash, ball, bed, sigh), floating z's asleep, and bursts for pet / drink / greetings
+/ tricks. Home sits in a room whose window sky and sun or moon follow local time, with a
+floor and a bowl that fills smoothly; screens enter in reading order; buttons give on press;
+haptics on pet and water; the adopt step previews the chosen puppy. Every animation is off
+with the OS reduce-motion setting (tests run that way). Checked in Chromium through a
+temporary web harness (not committed).
+
 ## Next
 
-1. **M2 — local data layer:** `expo-sqlite` + Drizzle schema (ARCHITECTURE §5), the repos,
-   `buildEngineInput(now)`, lazy idempotent finalization on open, and delete-all. The
-   engine's needs are in DOG_ENGINE §13: summaries must store `pets` and `stepTarget`, and
-   `screenRungAt` must be tracked.
-2. M3 — app shell with mock services (personas from `src/engine/sim/personas.ts` can drive
-   the mocks and the dev menu).
+1. M4 leftovers: Recording API fallback (Android ≤ 13), privacy-policy rationale screen,
+   device verification.
+2. M6 extension pushes + M7 Android usage-stats module (Kotlin), plus the shared nudge
+   ledger mirror their background producers read.
+3. M8 needs the `.riv` file (human).
+4. M10: Screen Time usage strings arrive with M6; crash reporting is optional.
 
 ## Notes
 
@@ -48,3 +122,8 @@ DOG_ENGINE.md §3–§11, with `computeDog()` and `finalizeDay()` as entry point
   peer resolution once pulled `react-dom@19.3`; it is pinned to match `react` (19.2.3).
 - SDK 57: the splash screen is configured via the `expo-splash-screen` plugin, not `splash`.
 - Only `*.test.ts(x)` files are tests, so helpers can live in `__tests__/`.
+- RNTL 14: `render`, `fireEvent.*` are async; always `await` them (an un-awaited press
+  leaves an act() scope open and later tests stop re-rendering).
+- Cloud sessions: api.expo.dev and docs sites are blocked by the network policy. Use
+  `EXPO_OFFLINE=1 npx expo install <pkg>` (reads versions from the installed SDK) and read
+  docs from GitHub sources.

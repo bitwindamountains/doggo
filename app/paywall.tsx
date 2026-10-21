@@ -1,5 +1,1 @@
-import { PlaceholderScreen } from '@/components/PlaceholderScreen';
-
-export default function PaywallScreen() {
-  return <PlaceholderScreen title="Premium" note="Coming in M9." />;
-}
+export { PaywallScreen as default } from '@/features/settings/PaywallScreen';

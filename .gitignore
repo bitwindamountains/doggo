@@ -55,3 +55,8 @@ secrets/
 .claude/settings.local.json
 *.log
 Thumbs.db
+
+# Screen Time extension sources, copied from react-native-device-activity on every
+# config evaluation (generated, like ios/ and android/). To customize the extension
+# (budget-aware pushes), set copyToTargetFolder: false and commit targets/ then.
+/targets/

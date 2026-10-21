@@ -81,7 +81,14 @@ function stepsForBucket(minute: number, segments: StepSegment[]): number {
   return steps;
 }
 
-function initialDog(persona: Persona): DogProfile {
+/** Steps the persona takes in the 10-minute bucket starting at `ms` (any day). */
+export function personaStepsAt(persona: Persona, ms: number): number {
+  return persona.prefs.stepsAvailable
+    ? stepsForBucket(localMinutes(ms, persona.prefs.timezone), persona.steps)
+    : 0;
+}
+
+export function initialDog(persona: Persona): DogProfile {
   const start = dayWindow(persona.startDay, persona.prefs).start;
   const d = persona.dog;
   return {
@@ -99,7 +106,7 @@ function initialDog(persona: Persona): DogProfile {
   };
 }
 
-function initialHistory(persona: Persona): DaySummary[] {
+export function initialHistory(persona: Persona): DaySummary[] {
   const gap = persona.historyGapDays ?? 0;
   return (persona.historySteps ?? []).map((steps, i) => ({
     day: addDays(persona.startDay, -(i + 1 + gap)),

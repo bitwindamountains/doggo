@@ -48,6 +48,7 @@ npm run typecheck                # tsc --noEmit
 npm run lint
 npm run simulate -- --persona=desk-worker   # simulated dog day; --persona=all, --days=N, --all
 npm run test:coverage            # engine coverage threshold is enforced (CI runs this)
+npx drizzle-kit generate         # after editing src/data/schema.ts: writes a new migration
 eas build --profile development --platform all
 ```
 

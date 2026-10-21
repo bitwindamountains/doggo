@@ -1,5 +1,1 @@
-import { PlaceholderScreen } from '@/components/PlaceholderScreen';
-
-export default function WalkScreen() {
-  return <PlaceholderScreen title="Walk" note="Manual walk timer (M3)." />;
-}
+export { WalkScreen as default } from '@/features/walk/WalkScreen';

@@ -134,9 +134,31 @@ export interface ScreenTimeService {
   presentAppPicker(groupId: string): Promise<{ count: number }>; // never returns app names to JS on iOS
   startDailyMonitoring(groupId: string, dayStartHHmm: string): Promise<void>;
   stopMonitoring(groupId: string): Promise<void>;
-  getRungsReachedToday(dayStartISO: string): Promise<ScreenRung>; // read from shared storage
+  // As built (M3): returns the rung with its fire time, so the early-fire guard can run.
+  getRungsReachedToday(dayStartISO: string): Promise<{ rung: ScreenRung; firedAt: string } | null>;
+}
+
+// src/services/notifications/NotificationService.ts (as built, M3)
+export interface NotificationService {
+  requestPermissions(): Promise<boolean>;
+  replaceSchedule(nudges: ScheduledNudge[]): Promise<void>; // cancel all, schedule these
+}
+
+// src/services/purchases/PurchaseService.ts (as built, M3); checked only via useEntitlement()
+export interface PurchaseService {
+  getEntitlements(): Promise<{ premium: boolean }>;
+  purchase(productId: 'monthly' | 'annual'): Promise<boolean>;
+  restore(): Promise<{ premium: boolean }>;
 }
 ```
+
+`src/services/index.ts` builds the service set. Until M4–M9 every build uses the mocks,
+driven by the dev persona and dev clock (`src/store/dev.ts`, Settings → Developer in
+`__DEV__` builds). `src/features/dog/refresh.ts` is the foreground pipeline: read steps
+(yesterday + today) and the screen-time rung into SQLite, count scheduled nudges whose time
+has passed as sent (`nudge_scheduled` → `nudge_sent` events, so the ledger stays right
+even though local notifications fire while the app is closed), `recompute()`, then
+replace the notification schedule with the engine's plan.
 
 Each has `ios`, `android` and `mock` implementations. The mock reads persona data so the
 whole app runs in a simulator.
@@ -150,7 +172,7 @@ whole app runs in a simulator.
 - Configure in `app.config.ts`:
   ```ts
   plugins: [
-    ['expo-build-properties', { ios: { deploymentTarget: '16.0' } }],
+    ['expo-build-properties', { ios: { deploymentTarget: '16.4' } }], // SDK 57 minimum (was 16.0)
     ['react-native-device-activity', { appleTeamId: process.env.APPLE_TEAM_ID, appGroup: 'group.app.dogyears.shared' }],
   ]
   ```
@@ -167,6 +189,22 @@ whole app runs in a simulator.
 - **Early-fire guard:** developers report thresholds firing too early on iOS 26.x. When the
   main app reads a rung, ignore it if `firedAt - dayStart < thresholdMinutes`. Log ignored
   events for diagnostics.
+- **As built (M6).** `react-native-device-activity` 0.6.1 (pinned). The plugin is added only
+  when `APPLE_TEAM_ID` is set (prebuild works without it). Deployment target is **16.4**
+  (the Expo SDK 57 minimum, not 16.0). Picker: `/pick-apps` modal with the persisted sheet
+  view (`familyActivitySelectionId = 'social'`); `presentAppPicker()` resolves with the
+  picked count. Monitoring: activity `dogyears_social`, wake time → wake time − 1 min,
+  events `rung1/2/3`; restarted when the wake time or the toggle changes. On open the app
+  reads `getEvents()` (fired thresholds, kept in the App Group by the extension), takes the
+  highest rung since day start and stores it as a `screen_rung` event; the early-fire guard
+  runs in `buildEngineInput`.
+  **Not built:** rung 2/3 pushes from the extension. The library's `sendNotification`
+  action cannot read the nudge ledger, quiet hours or bedtime, so using it would break the
+  budget rule; this needs custom extension code (Xcode). Until then the ball/bored reaction
+  shows when the app is opened. **Decision (2026-10-21, owner):** do not enable the
+  library's push as a stopgap; product rule 4 wins over F6 pushes until the extension can
+  read the shared ledger, quiet hours and bedtime. Real Android devices report screen time as unsupported
+  until M7.
 - v1.1 shield: shield buttons can only close/defer; they cannot open the main app. "Walk"
   closes the shielded app and posts a notification that deep-links to `dogyears://walk`.
 
@@ -212,6 +250,16 @@ fun getRungsReachedToday(): Int
   June 2026 Health Connect update, on-device steps use a device-specific synthetic package
   name: when filtering by data origin, include both `android` and the current device source,
   or do not filter by origin. For Android 13 and lower use the Recording API on mobile.
+- **As built (M4).** iOS: `@kingstinct/react-native-healthkit` 16.2.0 (Nitro), read-only,
+  `queryStatisticsCollectionForQuantity` with `{ minute: 10 }`, hourly background delivery +
+  `subscribeToChanges` → recompute. HealthKit hides read denials, so `isAvailable()` means
+  "asked, and steps exist in the last 7 days"; otherwise the dog would ask for walks that can
+  never count. Android: `react-native-health-connect` 4.1.3, `READ_STEPS` (declared in
+  `app.config.ts`), `aggregateGroupByDuration` 10 minutes, no origin filter, minSdk 26.
+  The Recording API fallback for Android ≤ 13 is **not built** (no maintained binding).
+  Real health runs on physical devices; simulators use the persona mocks.
+  **[HUMAN]** Health Connect needs a privacy-policy rationale screen (the plugin routes the
+  rationale intent to the main activity) and the Play Console health declaration.
 - Sedentary and walk detection use 10-minute step buckets only (no extra motion permission
   in MVP). Health Connect: aggregate grouped by a 10-minute duration.
 
@@ -223,6 +271,16 @@ fun getRungsReachedToday(): Int
   (side effects). Background producers (iOS extension, Android worker, HealthKit observer)
   consult the shared **nudge ledger** (App Group storage on iOS, SharedPreferences on
   Android, mirrored to SQLite on open) to respect the daily budget.
+- **As built (M5).** `src/services/notifications/expoNotifications.ts`: one Android channel
+  (`dog`), one category per nudge type with a single action button (PRD §7 rule 3), date
+  triggers, cancel-and-reschedule on every recompute. Taps (including the one that launched
+  the app) go through `handleNudgeResponse()`: `nudge_opened` event, ledger open count
+  (within 60 minutes), the action button answers the request (Stretch / Put phone down),
+  then navigation (`dogyears://walk` → `/walk`, `dogyears://home…` → `/`).
+  `SCHEDULE_EXACT_ALARM` is not requested (Play restricts it); **verify on a device** how
+  late a date trigger can arrive on Android 12+ with battery optimization.
+  Background producers (Screen Time extension, Android worker) still need the App Group /
+  SharedPreferences ledger mirror; it comes with their native code in M6/M7.
 
 ## 5. Local data model (SQLite via Drizzle)
 
@@ -247,6 +305,31 @@ nudge_ledger { day TEXT PK, sentCount INT, lastSentAt, ignoredStreakDays INT }
 ```
 
 Mood values and notes live only in `event` locally. Delete-all clears every table.
+
+**As built (M2).** The schema is `src/data/schema.ts`; migrations live in
+`src/data/migrations/` (`npx drizzle-kit generate` after a schema change). Columns are
+snake_case in SQL. Additions to the sketch above:
+
+- `dog.adoptedAsSenior`; `prefs.weekendWakeTime`, `prefs.weekendBedTime` (DOG_ENGINE §2).
+  `stepsAvailable` is not stored: it is runtime state from `HealthService`.
+- `day_summary.pets` and `day_summary.stepTarget` (DOG_ENGINE §13); `moodCheckin` is
+  `moodMin IS NOT NULL`.
+- `nudge_ledger.sentTypes` (JSON) and `openedCount`. An open counts only within 60 minutes
+  of the last push.
+- Event types `ball_played {rung}` (user tapped "Play": acknowledges the rung) and
+  `play_bow_answered` (user tapped "Stretch"). Payloads are typed in `src/data/events.ts`.
+  `walk_detected` events are stored at the walk's end; `walk_ended {start, steps}` is a
+  manual walk ending at the event's time.
+- Days are found by time range (`dayWindow`), not stored on events, so events stay valid
+  if the user's wake time changes.
+
+`buildEngineInput(db, now, runtime)` is the only bridge to the engine. It applies the
+early-fire guard to `screen_rung` events and uses the latest mood check-in of the day as
+`moodToday` (the summary keeps the lowest as `moodMin`). `recompute()` runs on every
+foreground: it finalizes past days, computes, stores newly detected walks and records the
+`app_opened` event after computing, so the greeting sees the previous open.
+`finalizePastDays()` is idempotent, commits each day in one transaction, detects walks the
+app never saw from that day's step buckets, and backfills at most 60 days.
 
 ## 6. Server data model (Supabase, later milestone)
 
@@ -337,8 +420,11 @@ change.**
 | `trickId` + `doTrick` | number + trigger | 1 sit, 2 paw, 3 spin, 4 rollOver, 5 highFive, 6 bow, 7 fetch, 8 dance |
 
 Art rules: inner-brow raise is the "asking" face; never tears, injuries or thin bodies.
-Until the `.riv` arrives, `PlaceholderDog` (react-native-svg shapes + a text label of the
-pose/request) implements the same `RenderProps`.
+Until the `.riv` arrives, `PlaceholderDog` implements the same `RenderProps` with Microsoft
+Fluent Emoji 3D art (MIT, `assets/images/dog/LICENSE.md`, credited on "Your data"): a dog
+(guide dog with harness for the leash request), props (ball, teddy, bed), the face on the
+pillow with eyes closed when asleep, transform-based motion, and a text label of the
+pose/request. It has one dog illustration for every breed.
 
 ## 8. Configuration and secrets
 

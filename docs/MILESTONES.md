@@ -50,39 +50,39 @@ imports nothing from React/Expo/data/services.
 
 ## M2 — Local data layer
 
-- [ ] `expo-sqlite` + Drizzle schema and first migration (ARCHITECTURE §5).
-- [ ] Repos: `dogRepo`, `prefsRepo`, `eventsRepo`, `dayRepo`, `ledgerRepo`, `stepCacheRepo`.
-- [ ] `buildEngineInput(now)`: the only bridge from stored data to the engine.
-- [ ] Lazy finalization of past days on app open (idempotent; test running it twice).
-- [ ] "Delete all data" clears every table and resets onboarding.
+- [x] `expo-sqlite` + Drizzle schema and first migration (ARCHITECTURE §5).
+- [x] Repos: `dogRepo`, `prefsRepo`, `eventsRepo`, `dayRepo`, `ledgerRepo`, `stepCacheRepo`.
+- [x] `buildEngineInput(now)`: the only bridge from stored data to the engine.
+- [x] Lazy finalization of past days on app open (idempotent; test running it twice).
+- [x] "Delete all data" clears every table and resets onboarding.
 
 **DoD:** repo and assembler tests pass; finalization idempotency test passes.
 
 ## M3 — App shell and UI (placeholder dog, mock services)
 
-- [ ] Service interfaces + mock implementations (Health, ScreenTime, Notifications,
+- [x] Service interfaces + mock implementations (Health, ScreenTime, Notifications,
       Purchases). Dev menu to switch personas and fast-forward time in development builds.
-- [ ] Onboarding (PRD F1) with permission primer screens.
-- [ ] Home scene (F2): `PlaceholderDog` implementing `RenderProps`, room lighting by time,
+- [x] Onboarding (PRD F1) with permission primer screens.
+- [x] Home scene (F2): `PlaceholderDog` implementing `RenderProps`, room lighting by time,
       bowl, quick actions (Start walk, Log water, Pet, How are you?).
-- [ ] Recompute on `AppState` → active; greetings (F3); trigger animations from output diffs.
-- [ ] Walk screen (manual walk), mood check-in with 1-minute breathing (F9), Support screen
+- [x] Recompute on `AppState` → active; greetings (F3); trigger animations from output diffs.
+- [x] Walk screen (manual walk), mood check-in with 1-minute breathing (F9), Support screen
       with remote-config resource list (numbers marked "verify before launch").
-- [ ] Progress (F10) with no streak counters; Settings (F13); "Your data" screen.
+- [x] Progress (F10) with no streak counters; Settings (F13); "Your data" screen.
 - [x] `src/copy/en.ts` with all keys from DOG_ENGINE §10 and the copy-rules test (PRD §7).
-- [ ] Accessibility labels for every dog state; reduce-motion support.
+- [x] Accessibility labels for every dog state; reduce-motion support.
 
 **DoD:** the whole app is usable in simulators with mock data for every persona; copy test
 passes; screen reader reads the dog's state.
 
 ## M4 — Steps (real health data)
 
-- [ ] iOS `HealthService`: stepCount permission, 10-minute buckets, observer + hourly
+- [x] iOS `HealthService`: stepCount permission, 10-minute buckets, observer + hourly
       background delivery that records events and asks the nudge planner.
 - [ ] Android `HealthService`: Health Connect `READ_STEPS` (+ optional background read),
       synthetic-package-name-safe aggregation, Recording API fallback for Android ≤ 13.
-- [ ] Walk detection writes `walk_detected` events; leash and play-bow requests go live.
-- [ ] Permission-denied path keeps manual walks working.
+- [x] Walk detection writes `walk_detected` events; leash and play-bow requests go live.
+- [x] Permission-denied path keeps manual walks working.
 - [ ] **[HUMAN]** Verify on devices: totals within 5% of Apple Health / Health Connect; the
       leash request appears on a low-step afternoon and clears after a walk.
 
@@ -90,9 +90,9 @@ passes; screen reader reads the dog's state.
 
 ## M5 — Notifications and the nudge ledger
 
-- [ ] `expo-notifications` setup, categories with action buttons, Android channel.
-- [ ] Deep links (`dogyears://walk`, `dogyears://home?play=1`, ...) via Expo Router.
-- [ ] `NotificationService` applies `nudgePlan`: cancel and reschedule on each compute.
+- [x] `expo-notifications` setup, categories with action buttons, Android channel.
+- [x] Deep links (`dogyears://walk`, `dogyears://home?play=1`, ...) via Expo Router.
+- [x] `NotificationService` applies `nudgePlan`: cancel and reschedule on each compute.
 - [ ] Shared nudge ledger: App Group storage (iOS) / SharedPreferences (Android), mirrored
       to SQLite on open; opened-notification tracking; back-off + in-app frequency question.
 
@@ -101,12 +101,12 @@ and actions on both devices.
 
 ## M6 — iOS Screen Time
 
-- [ ] Add `react-native-device-activity` + config plugin (ARCHITECTURE §4.2), iOS 16 target.
-- [ ] Authorization flow and Apple app picker for group `social` (free tier: 1 group).
-- [ ] Daily schedule from the user's day start; events at 45/60/120 minutes.
+- [x] Add `react-native-device-activity` + config plugin (ARCHITECTURE §4.2), iOS 16 target.
+- [x] Authorization flow and Apple app picker for group `social` (free tier: 1 group).
+- [x] Daily schedule from the user's day start; events at 45/60/120 minutes.
 - [ ] Extension writes `{rung, firedAt}` to App Group storage and posts rung 2/3
       notifications only if the shared ledger allows.
-- [ ] Main app reads rungs on foreground with the early-fire guard; ball/bored requests live.
+- [x] Main app reads rungs on foreground with the early-fire guard; ball/bored requests live.
 - [ ] **[HUMAN]** Device test: 60 minutes in a watched app triggers the ball notification;
       unwatched apps never trigger anything.
 
@@ -140,9 +140,9 @@ with aggressive battery saver documented in `docs/ARCHITECTURE.md`.
 
 - [ ] **[HUMAN]** Create products (monthly, annual, 7-day trial) with regional pricing,
       RevenueCat project, entitlement `premium`, API keys.
-- [ ] `PurchaseService` + `useEntitlement('premium')`; paywall screen; restore purchases.
+- [x] `PurchaseService` + `useEntitlement('premium')`; paywall screen; restore purchases.
 - [ ] Gates: more than one screen-time group, extra breeds (later: cosmetics shop).
-- [ ] Trial reminder 2 days before conversion (separate from the dog's nudge budget,
+- [x] Trial reminder 2 days before conversion (separate from the dog's nudge budget,
       respects quiet hours); cancel instructions one tap away.
 
 **DoD:** **[HUMAN]** sandbox purchase, restore and cancel tested on both stores.
@@ -151,7 +151,7 @@ with aggressive battery saver documented in `docs/ARCHITECTURE.md`.
 
 - [ ] Usage-description strings for HealthKit, notifications and Screen Time that state
       exactly what is read and that it stays on the phone.
-- [ ] Draft privacy policy text, App Store privacy labels and Play Data safety answers
+- [x] Draft privacy policy text, App Store privacy labels and Play Data safety answers
       (**[HUMAN]** reviews and submits).
 - [ ] Crash reporting (optional, no sensitive data in breadcrumbs).
 - [ ] **[HUMAN]** Filipino copy from a native speaker; verify support hotline numbers.

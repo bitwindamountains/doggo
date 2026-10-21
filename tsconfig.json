@@ -8,7 +8,9 @@
     "paths": {
       "@/engine": ["./src/engine"],
       "@/engine/*": ["./src/engine/*"],
+      "@/data": ["./src/data"],
       "@/data/*": ["./src/data/*"],
+      "@/services": ["./src/services"],
       "@/services/*": ["./src/services/*"],
       "@/features/*": ["./src/features/*"],
       "@/components/*": ["./src/components/*"],
