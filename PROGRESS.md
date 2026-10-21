@@ -77,6 +77,14 @@ persona mocks in simulators. Config plugins, entitlements and `READ_STEPS` verif
 `expo config --type introspect`. **[HUMAN]** device check: totals within 5% of Apple Health
 / Health Connect, leash on a low-step afternoon clears after a walk.
 
+**M10 drafts.** `docs/release/PRIVACY_POLICY_DRAFT.md` and
+`docs/release/STORE_PRIVACY_ANSWERS.md` (App Store label, Play Data safety, Health Connect
+declaration notes). **[HUMAN]** review, fill placeholders, publish the policy URL.
+
+**Not buildable in the cloud session:** M6 (Screen Time needs the Family Controls
+entitlement + Xcode) and M7 (Kotlin module; no Android SDK here: dl.google.com is blocked).
+Build them on a machine with Xcode / Android Studio.
+
 ## Next
 
 1. M4 leftovers: Recording API fallback (Android ≤ 13), privacy-policy rationale screen,
@@ -84,7 +92,7 @@ persona mocks in simulators. Config plugins, entitlements and `READ_STEPS` verif
 2. M6/M7: Screen Time (needs the Apple entitlement) and the Android usage-stats module
    (Kotlin), plus the shared nudge ledger mirror for their background producers.
 3. M8 needs the `.riv` file; M9 needs RevenueCat products and keys (human).
-4. M10 drafts: usage-description strings, privacy policy, store privacy answers.
+4. M10: Screen Time usage strings arrive with M6; crash reporting is optional.
 
 ## Notes
 

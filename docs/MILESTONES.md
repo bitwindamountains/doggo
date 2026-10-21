@@ -151,7 +151,7 @@ with aggressive battery saver documented in `docs/ARCHITECTURE.md`.
 
 - [ ] Usage-description strings for HealthKit, notifications and Screen Time that state
       exactly what is read and that it stays on the phone.
-- [ ] Draft privacy policy text, App Store privacy labels and Play Data safety answers
+- [x] Draft privacy policy text, App Store privacy labels and Play Data safety answers
       (**[HUMAN]** reviews and submits).
 - [ ] Crash reporting (optional, no sensitive data in breadcrumbs).
 - [ ] **[HUMAN]** Filipino copy from a native speaker; verify support hotline numbers.
