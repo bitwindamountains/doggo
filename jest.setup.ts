@@ -14,3 +14,10 @@ jest.mock('expo-router', () => {
     Tabs: Object.assign(Null, { Screen: Null }),
   };
 });
+
+// Tests run with the OS "reduce motion" setting on: native-driver animations cannot run in
+// Jest (a delayed start can fire after teardown), and every screen must be complete without
+// motion anyway.
+jest
+  .spyOn(jest.requireActual('react-native').AccessibilityInfo, 'isReduceMotionEnabled')
+  .mockResolvedValue(true);

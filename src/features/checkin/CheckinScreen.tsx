@@ -30,11 +30,13 @@ export function Breathing({ name, reduceMotion }: { name: string; reduceMotion: 
   }, []);
   useEffect(() => {
     if (reduceMotion || left === 0) return;
-    Animated.timing(size, {
+    const anim = Animated.timing(size, {
       toValue: breathingIn ? 1 : 0.6,
       duration: HALF_BREATH_MS,
       useNativeDriver: true,
-    }).start();
+    });
+    anim.start();
+    return () => anim.stop();
   }, [breathingIn, reduceMotion, left, size]);
 
   if (left === 0) return <Text style={styles.big}>{t('ui.breath.done', { name })}</Text>;

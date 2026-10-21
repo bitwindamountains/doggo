@@ -98,6 +98,15 @@ must check `useEntitlement('premium')`. **[HUMAN]** dashboard products, keys, sa
 **Not buildable in the cloud session:** M7 (Kotlin module; no Android SDK here:
 dl.google.com is blocked). Build it on a machine with Android Studio.
 
+**UI and motion pass.** `PlaceholderDog` is now alive: breathing paced by energy, a tail
+that wags by contentment with a bond bias, an asking head tilt, breed ears and legs, drawn
+props (leash, ball, bed, sigh), floating z's asleep, and bursts for pet / drink / greetings
+/ tricks. Home sits in a room whose window sky and sun or moon follow local time, with a
+floor and a bowl that fills smoothly; screens enter in reading order; buttons give on press;
+haptics on pet and water; the adopt step previews the chosen puppy. Every animation is off
+with the OS reduce-motion setting (tests run that way). Checked in Chromium through a
+temporary web harness (not committed).
+
 ## Next
 
 1. M4 leftovers: Recording API fallback (Android ≤ 13), privacy-policy rationale screen,

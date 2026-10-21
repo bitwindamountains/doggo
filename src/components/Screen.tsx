@@ -1,6 +1,10 @@
+import { Children } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useApp } from './AppProvider';
+import { t as motion } from './motion';
+import { Rise } from './Rise';
 import { colors } from './theme';
 
 interface Props {
@@ -12,16 +16,21 @@ interface Props {
 
 /** Page frame: safe area, optional header and scrolling. */
 export function Screen({ title, children, scroll = true, background = colors.cream }: Props) {
-  const body = (
-    <>
-      {title ? (
-        <Text accessibilityRole="header" style={styles.title}>
-          {title}
-        </Text>
-      ) : null}
-      {children}
-    </>
-  );
+  const { reduceMotion } = useApp();
+  // Parts arrive in reading order: the title, then each child, 70 ms apart.
+  const parts = [
+    title ? (
+      <Text accessibilityRole="header" style={styles.title}>
+        {title}
+      </Text>
+    ) : null,
+    ...Children.toArray(children),
+  ].filter(Boolean);
+  const body = parts.map((part, i) => (
+    <Rise key={i} delay={i * motion.stagger} reduceMotion={reduceMotion}>
+      {part}
+    </Rise>
+  ));
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: background }]}>
       {scroll ? (

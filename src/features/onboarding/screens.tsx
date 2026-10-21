@@ -11,7 +11,8 @@ import { Screen } from '@/components/Screen';
 import { Stepper } from '@/components/Stepper';
 import { colors } from '@/components/theme';
 import { t } from '@/copy';
-import type { Breed } from '@/engine';
+import { RENDER_INDEX, type Breed, type RenderProps } from '@/engine';
+import { PlaceholderDog } from '@/features/dog/PlaceholderDog';
 import { SOCIAL_GROUP, syncScreenTimeMonitoring } from '@/services/screentime/ScreenTimeService';
 
 import {
@@ -24,6 +25,22 @@ import {
 } from './draft';
 
 const BREEDS: Breed[] = ['aspin', 'shiba', 'golden', 'corgi'];
+
+/** A happy, awake puppy of `breed` for the adoption preview. */
+function previewProps(breed: Breed, reduceMotion: boolean): RenderProps {
+  return {
+    breed: RENDER_INDEX.breed[breed],
+    lifeStage: RENDER_INDEX.lifeStage.puppy,
+    energy: 80,
+    contentment: 90,
+    bond: 20,
+    pose: RENDER_INDEX.pose.idle,
+    request: RENDER_INDEX.request.none,
+    timeOfDay: 12,
+    reduceMotion,
+    tailRightBias: 0.1,
+  };
+}
 
 export function WelcomeScreen() {
   const router = useRouter();
@@ -39,8 +56,15 @@ export function WelcomeScreen() {
 export function AdoptScreen() {
   const router = useRouter();
   const { breed, update } = useDraft();
+  const { reduceMotion } = useApp();
   return (
     <Screen title={t('ui.adopt.title')}>
+      {/* live preview: the chosen puppy, hopping each time the choice changes */}
+      <PlaceholderDog
+        render={previewProps(breed, reduceMotion)}
+        label={t(`ui.breed.${breed}`)}
+        event={{ name: 'greetSmall', id: breed }}
+      />
       {BREEDS.map((b) => (
         <Button
           key={b}

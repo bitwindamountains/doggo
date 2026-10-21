@@ -2,11 +2,13 @@
 // water bowl, the current request's action and four quick actions.
 
 import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import { useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { useApp } from '@/components/AppProvider';
 import { Button } from '@/components/Button';
+import { Rise } from '@/components/Rise';
 import { Screen } from '@/components/Screen';
 import { colors, roomColor } from '@/components/theme';
 import { t } from '@/copy';
@@ -15,9 +17,15 @@ import { dayKeyAt, type Request } from '@/engine';
 import { PlaceholderDog, type DogTrigger, type Trigger } from '@/features/dog/PlaceholderDog';
 import { useDogStore } from '@/store/dogStore';
 
+import { Room } from './Room';
+
+// Touch feedback; harmless where haptics are unavailable.
+const tap = (style: Haptics.ImpactFeedbackStyle) =>
+  Haptics.impactAsync(style).catch(() => undefined);
+
 export function HomeScreen() {
   const router = useRouter();
-  const { db, now, record, refresh } = useApp();
+  const { db, now, record, refresh, reduceMotion } = useApp();
   const output = useDogStore((s) => s.output);
   const dog = useDogStore((s) => s.dog);
   const celebrate = useDogStore((s) => s.celebrate);
@@ -40,10 +48,12 @@ export function HomeScreen() {
 
   const pet = async () => {
     fire('pet');
+    tap(Haptics.ImpactFeedbackStyle.Light);
     await record('pet', null);
   };
   const water = async () => {
     fire('drink');
+    tap(Haptics.ImpactFeedbackStyle.Soft);
     await record('water_logged', null);
   };
 
@@ -71,17 +81,28 @@ export function HomeScreen() {
 
   return (
     <Screen background={roomColor(render.timeOfDay, asleep)}>
-      <PlaceholderDog
-        render={render}
-        label={t(output.a11yLabelKey, { name })}
-        hint={t('ui.home.petHint', { name })}
-        reaction={reaction}
-        event={event}
-        onPress={pet}
-      />
-      <Text style={[styles.line, { color: ink }]} accessibilityLiveRegion="polite">
-        {t(output.lineKey, { name })}
-      </Text>
+      <Room
+        hours={render.timeOfDay}
+        asleep={asleep}
+        reduceMotion={reduceMotion}
+        bowlLevel={state.bowlLevel}
+        bowlLabel={t('ui.home.bowl', { percent: Math.round(state.bowlLevel * 100) })}
+      >
+        <PlaceholderDog
+          render={render}
+          label={t(output.a11yLabelKey, { name })}
+          hint={t('ui.home.petHint', { name })}
+          reaction={reaction}
+          event={event}
+          onPress={pet}
+        />
+      </Room>
+      {/* a new line fades in when the dog does something new */}
+      <Rise key={output.lineKey} reduceMotion={reduceMotion}>
+        <Text style={[styles.line, { color: ink }]} accessibilityLiveRegion="polite">
+          {t(output.lineKey, { name })}
+        </Text>
+      </Rise>
 
       {celebrate.length ? (
         <View style={styles.card}>
@@ -109,14 +130,6 @@ export function HomeScreen() {
         <>
           {act ? <Button label={t(`ui.request.${state.request}`, { name })} onPress={act} /> : null}
 
-          <View
-            style={styles.bowl}
-            accessible
-            accessibilityLabel={t('ui.home.bowl', { percent: Math.round(state.bowlLevel * 100) })}
-          >
-            <View style={[styles.bowlFill, { height: `${Math.round(state.bowlLevel * 100)}%` }]} />
-          </View>
-
           {output.askNudgeFrequency ? (
             <View style={styles.card}>
               <Text style={styles.cardText}>{t('nudges.frequencyQuestion')}</Text>
@@ -130,18 +143,18 @@ export function HomeScreen() {
           ) : null}
 
           <View style={styles.actions}>
-            <Button
-              kind="secondary"
-              label={t('ui.home.startWalk')}
-              onPress={() => router.push('/walk')}
-            />
-            <Button kind="secondary" label={t('ui.home.logWater')} onPress={water} />
-            <Button kind="secondary" label={t('ui.home.pet')} onPress={pet} />
-            <Button
-              kind="secondary"
-              label={t('ui.home.checkin')}
-              onPress={() => router.push('/checkin')}
-            />
+            {(
+              [
+                ['ui.home.startWalk', () => router.push('/walk')],
+                ['ui.home.logWater', water],
+                ['ui.home.pet', pet],
+                ['ui.home.checkin', () => router.push('/checkin')],
+              ] as const
+            ).map(([key, onPress]) => (
+              <View key={key} style={styles.action}>
+                <Button kind="secondary" label={t(key)} onPress={onPress} />
+              </View>
+            ))}
           </View>
         </>
       )}
@@ -150,22 +163,16 @@ export function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  line: { fontSize: 18, textAlign: 'center', marginVertical: 8 },
+  line: {
+    fontSize: 20,
+    lineHeight: 28,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginVertical: 12,
+  },
   card: { backgroundColor: colors.card, borderRadius: 16, padding: 16, gap: 4 },
   cardTitle: { fontSize: 20, fontWeight: '700', color: colors.ink },
   cardText: { fontSize: 16, color: colors.ink },
-  bowl: {
-    alignSelf: 'center',
-    width: 90,
-    height: 36,
-    borderBottomLeftRadius: 40,
-    borderBottomRightRadius: 40,
-    borderWidth: 3,
-    borderColor: colors.inkSoft,
-    overflow: 'hidden',
-    justifyContent: 'flex-end',
-    marginVertical: 8,
-  },
-  bowlFill: { backgroundColor: colors.water, width: '100%' },
-  actions: { gap: 4 },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
+  action: { width: '48.5%' },
 });
