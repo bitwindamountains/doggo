@@ -41,6 +41,7 @@ export const en = {
   'push.bored.0': '{name} flopped down with a big sigh.',
   'push.bedtime.0': '{name} is yawning and heading to bed.',
   'push.bedtime.1': '{name} is curling up. Bedtime soon.',
+  'push.trial.reminder': 'Your Premium trial ends in 2 days. Manage it in Settings.',
   'push.action.leash': "Let's walk",
   'push.action.playBow': 'Stretch',
   'push.action.ball': 'Put phone down',
@@ -191,6 +192,8 @@ export const en = {
   'ui.paywall.restore': 'Restore purchases',
   'ui.paywall.cancelInfo': 'Cancel any time in your app store subscriptions.',
   'ui.paywall.active': 'Premium is active.',
+  'ui.paywall.manage': 'Manage subscription',
+  'ui.paywall.trialTitle': 'Dog Years Premium',
 } as const;
 
 export type CopyKey = keyof typeof en;

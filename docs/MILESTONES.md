@@ -140,9 +140,9 @@ with aggressive battery saver documented in `docs/ARCHITECTURE.md`.
 
 - [ ] **[HUMAN]** Create products (monthly, annual, 7-day trial) with regional pricing,
       RevenueCat project, entitlement `premium`, API keys.
-- [ ] `PurchaseService` + `useEntitlement('premium')`; paywall screen; restore purchases.
+- [x] `PurchaseService` + `useEntitlement('premium')`; paywall screen; restore purchases.
 - [ ] Gates: more than one screen-time group, extra breeds (later: cosmetics shop).
-- [ ] Trial reminder 2 days before conversion (separate from the dog's nudge budget,
+- [x] Trial reminder 2 days before conversion (separate from the dog's nudge budget,
       respects quiet hours); cancel instructions one tap away.
 
 **DoD:** **[HUMAN]** sandbox purchase, restore and cancel tested on both stores.

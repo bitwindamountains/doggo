@@ -3,7 +3,7 @@
 
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { Linking, Platform, StyleSheet, Text } from 'react-native';
 
 import { useApp } from '@/components/AppProvider';
 import { Button } from '@/components/Button';
@@ -11,6 +11,12 @@ import { Screen } from '@/components/Screen';
 import { colors } from '@/components/theme';
 import { t } from '@/copy';
 import { useEntitlement } from '@/services/purchases/useEntitlement';
+
+// Cancel instructions one tap away (PRD F12): the store's own subscription page.
+const SUBSCRIPTIONS_URL =
+  Platform.OS === 'ios'
+    ? 'https://apps.apple.com/account/subscriptions'
+    : 'https://play.google.com/store/account/subscriptions';
 
 export function PaywallScreen() {
   const router = useRouter();
@@ -35,6 +41,11 @@ export function PaywallScreen() {
         onPress={async () => setBought((await services.purchases.restore()).premium)}
       />
       <Text style={styles.hint}>{t('ui.paywall.cancelInfo')}</Text>
+      <Button
+        kind="secondary"
+        label={t('ui.paywall.manage')}
+        onPress={() => Linking.openURL(SUBSCRIPTIONS_URL)}
+      />
       <Button kind="secondary" label={t('ui.common.done')} onPress={() => router.back()} />
     </Screen>
   );

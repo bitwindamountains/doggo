@@ -19,6 +19,11 @@ export interface NotificationService {
   requestPermissions(): Promise<boolean>;
   /** Cancels everything this app scheduled and schedules `nudges` instead. */
   replaceSchedule(nudges: ScheduledNudge[]): Promise<void>;
+  /**
+   * The trial reminder (PRD F12). Separate from the dog's nudges and their budget;
+   * `null` cancels it. replaceSchedule() never touches it.
+   */
+  setTrialReminder(reminder: { at: string; title: string; body: string } | null): Promise<void>;
   /** Calls `listener` for each response, including the one that cold-started the app. */
   onResponse(listener: (response: NudgeResponse) => void): () => void;
 }

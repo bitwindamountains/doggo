@@ -12,6 +12,7 @@ import type { NotificationService, NudgeResponse } from './NotificationService';
 
 const CHANNEL = 'dog';
 const ACTION = 'dog-action';
+const TRIAL_ID = 'trial-reminder';
 const TYPES: NudgeType[] = ['leash', 'playBow', 'ball', 'bored', 'bedtime'];
 const ACTION_COPY: Record<NudgeType, string> = {
   leash: 'push.action.leash',
@@ -76,7 +77,12 @@ export function createExpoNotifications(toDeviceMs: (ms: number) => number): Not
 
     async replaceSchedule(nudges) {
       await setup();
-      await Notifications.cancelAllScheduledNotificationsAsync();
+      // Cancel only the dog's nudges; the trial reminder stays.
+      for (const n of await Notifications.getAllScheduledNotificationsAsync()) {
+        if (n.identifier !== TRIAL_ID) {
+          await Notifications.cancelScheduledNotificationAsync(n.identifier);
+        }
+      }
       for (const n of nudges) {
         const date = toDeviceMs(Date.parse(n.at));
         if (date <= Date.now()) continue;
@@ -94,6 +100,21 @@ export function createExpoNotifications(toDeviceMs: (ms: number) => number): Not
           },
         });
       }
+    },
+
+    async setTrialReminder(reminder) {
+      await setup();
+      await Notifications.cancelScheduledNotificationAsync(TRIAL_ID);
+      if (!reminder || Date.parse(reminder.at) <= Date.now()) return;
+      await Notifications.scheduleNotificationAsync({
+        identifier: TRIAL_ID,
+        content: { title: reminder.title, body: reminder.body, data: { kind: 'trial' } },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DATE,
+          date: Date.parse(reminder.at),
+          channelId: CHANNEL,
+        },
+      });
     },
 
     onResponse(listener) {

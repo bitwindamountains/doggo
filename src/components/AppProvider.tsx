@@ -16,6 +16,7 @@ import { AccessibilityInfo, AppState } from 'react-native';
 import { eventsRepo, migrate, type Db, type EventPayloads, type EventType } from '@/data';
 import { refreshDog } from '@/features/dog/refresh';
 import { handleNudgeResponse } from '@/features/dog/nudgeResponse';
+import { scheduleTrialReminder } from '@/features/settings/trialReminder';
 import { createAppServices, type Services } from '@/services';
 import { syncScreenTimeMonitoring } from '@/services/screentime/ScreenTimeService';
 import { useDogStore } from '@/store/dogStore';
@@ -90,6 +91,7 @@ export function AppProvider({ children, db: injectedDb, services: injectedServic
       setReduceMotion(reduceMotionRef.current);
       await refresh(true);
       if (alive) setReady(true);
+      await scheduleTrialReminder(services, db, now());
       // shortcut: monitoring uses the weekday wake time even on weekend schedules.
       await syncScreenTimeMonitoring(services.screenTime, useDogStore.getState().prefs);
       // HealthKit background delivery wakes the app; recompute and reschedule then.
@@ -109,7 +111,7 @@ export function AppProvider({ children, db: injectedDb, services: injectedServic
       appState.remove();
       motion.remove();
     };
-  }, [db, services, refresh]);
+  }, [db, services, now, refresh]);
 
   // Taps on nudges, including the one that launched the app.
   useEffect(

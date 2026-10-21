@@ -23,7 +23,7 @@ export interface Services {
  * in simulators). Steps are real on a physical device and persona mocks in simulators,
  * where HealthKit / Health Connect have no real data (CLAUDE.md engineering rule 8).
  * Screen time is real on iPhones (M6), off on Android devices until M7. Purchases stay
- * mocked until M9. `toDeviceMs` maps the dev
+ * RevenueCat once its keys are configured (M9). `toDeviceMs` maps the dev
  * clock back to real time for the notification scheduler.
  */
 export function createAppServices(
@@ -52,10 +52,29 @@ export function createAppServices(
       : (
           require('./screentime/unsupportedScreenTime') as typeof import('./screentime/unsupportedScreenTime')
         ).createUnsupportedScreenTime();
-  /* eslint-enable @typescript-eslint/no-require-imports */
+  const Constants = (require('expo-constants') as typeof import('expo-constants')).default;
+  const extra = (Constants.expoConfig?.extra ?? {}) as Record<string, string | null>;
+  const rcKey = Platform.OS === 'ios' ? extra.revenueCatIosKey : extra.revenueCatAndroidKey;
   const mocks = createMockServices(getPersona, nowMs);
-  if (!isDevice) return { ...mocks, notifications };
-  return { ...mocks, notifications, health: realHealth(), screenTime: realScreenTime() };
+  // No keys yet: the mock in dev builds, nothing to buy in release builds.
+  const purchases: PurchaseService = rcKey
+    ? (
+        require('./purchases/revenueCat') as typeof import('./purchases/revenueCat')
+      ).createRevenueCat(rcKey)
+    : __DEV__
+      ? mocks.purchases
+      : (
+          require('./purchases/mockPurchases') as typeof import('./purchases/mockPurchases')
+        ).createUnavailablePurchases();
+  /* eslint-enable @typescript-eslint/no-require-imports */
+  if (!isDevice) return { ...mocks, notifications, purchases };
+  return {
+    ...mocks,
+    notifications,
+    purchases,
+    health: realHealth(),
+    screenTime: realScreenTime(),
+  };
 }
 
 export function createMockServices(getPersona: () => Persona, nowMs: () => number): Services {

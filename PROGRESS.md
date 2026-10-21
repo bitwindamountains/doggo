@@ -87,6 +87,15 @@ pushes from the extension (custom Swift reading the shared ledger) and the **[HU
 test. Set `APPLE_TEAM_ID` to enable the plugin; Family Controls works in local dev builds,
 TestFlight needs Apple's Distribution approval.
 
+**M9 — purchases (code) done.** `react-native-purchases` service (current offering's monthly /
+annual package, `premium` entitlement, restore), used when `REVENUECAT_IOS_KEY` /
+`REVENUECAT_ANDROID_KEY` are set; dev builds without keys use the mock, release builds
+without keys offer nothing (Premium can never be free by accident). Trial reminder: local
+notification 2 days before conversion at wake + 2 h, out of quiet hours, outside the nudge
+budget; nudge rescheduling no longer cancels it. Paywall has "Manage subscription" (store
+page). Gates: nothing to gate yet (one group, four launch breeds); new Premium features
+must check `useEntitlement('premium')`. **[HUMAN]** dashboard products, keys, sandbox tests.
+
 **Not buildable in the cloud session:** M7 (Kotlin module; no Android SDK here:
 dl.google.com is blocked). Build it on a machine with Android Studio.
 
@@ -96,7 +105,7 @@ dl.google.com is blocked). Build it on a machine with Android Studio.
    device verification.
 2. M6 extension pushes + M7 Android usage-stats module (Kotlin), plus the shared nudge
    ledger mirror their background producers read.
-3. M8 needs the `.riv` file; M9 needs RevenueCat products and keys (human).
+3. M8 needs the `.riv` file (human).
 4. M10: Screen Time usage strings arrive with M6; crash reporting is optional.
 
 ## Notes
