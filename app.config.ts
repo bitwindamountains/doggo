@@ -37,6 +37,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       monochromeImage: './assets/images/android-icon-monochrome.png',
     },
     predictiveBackGestureEnabled: false,
+    // Health Connect step reads (ARCHITECTURE §4.4). The library's plugin adds only the
+    // privacy-rationale intent; the permission itself is declared here.
+    permissions: ['android.permission.health.READ_STEPS'],
   },
   web: {
     favicon: './assets/images/favicon.png',
@@ -48,6 +51,18 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // shortcut: no custom monochrome notification icon yet (Android falls back to the app
     // icon); add a 96x96 white-on-transparent PNG as `icon` before release.
     ['expo-notifications', { color: '#E07A3F' }],
+    [
+      '@kingstinct/react-native-healthkit',
+      {
+        NSHealthShareUsageDescription:
+          'Dog Years reads your step count so your dog knows when you have walked. Steps stay on this phone.',
+        NSHealthUpdateUsageDescription: false, // read only
+        background: true, // hourly step delivery
+      },
+    ],
+    'react-native-health-connect',
+    // Health Connect needs Android 8.0+ (minSdk 26).
+    ['expo-build-properties', { android: { minSdkVersion: 26 } }],
     [
       'expo-splash-screen',
       { image: './assets/images/splash-icon.png', imageWidth: 200, backgroundColor: '#FFF7EC' },

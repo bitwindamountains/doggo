@@ -19,9 +19,11 @@ export interface Services {
 }
 
 /**
- * Services for the running app: real notifications (local notifications work in
- * simulators too); everything else stays on mocks until its milestone. `toDeviceMs`
- * maps the dev clock back to real time for the notification scheduler.
+ * Services for the running app. Notifications are always real (local notifications work
+ * in simulators). Steps are real on a physical device and persona mocks in simulators,
+ * where HealthKit / Health Connect have no real data (CLAUDE.md engineering rule 8).
+ * Screen time and purchases stay mocked until M6/M7 and M9. `toDeviceMs` maps the dev
+ * clock back to real time for the notification scheduler.
  */
 export function createAppServices(
   getPersona: () => Persona,
@@ -29,13 +31,21 @@ export function createAppServices(
   toDeviceMs: (ms: number) => number,
 ): Services {
   // Loaded lazily so Jest never imports native modules.
-  type Module = typeof import('./notifications/expoNotifications');
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { createExpoNotifications } = require('./notifications/expoNotifications') as Module;
-  return {
-    ...createMockServices(getPersona, nowMs),
-    notifications: createExpoNotifications(toDeviceMs),
-  };
+  /* eslint-disable @typescript-eslint/no-require-imports */
+  const { Platform } = require('react-native') as typeof import('react-native');
+  const { isDevice } = require('expo-device') as typeof import('expo-device');
+  const notifications = (
+    require('./notifications/expoNotifications') as typeof import('./notifications/expoNotifications')
+  ).createExpoNotifications(toDeviceMs);
+  const realHealth = (): HealthService =>
+    Platform.OS === 'ios'
+      ? (require('./health/iosHealth') as typeof import('./health/iosHealth')).createIosHealth()
+      : (
+          require('./health/androidHealth') as typeof import('./health/androidHealth')
+        ).createAndroidHealth();
+  /* eslint-enable @typescript-eslint/no-require-imports */
+  const mocks = createMockServices(getPersona, nowMs);
+  return { ...mocks, notifications, health: isDevice ? realHealth() : mocks.health };
 }
 
 export function createMockServices(getPersona: () => Persona, nowMs: () => number): Services {

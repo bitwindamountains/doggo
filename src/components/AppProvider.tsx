@@ -88,6 +88,10 @@ export function AppProvider({ children, db: injectedDb, services: injectedServic
       setReduceMotion(reduceMotionRef.current);
       await refresh(true);
       if (alive) setReady(true);
+      // HealthKit background delivery wakes the app; recompute and reschedule then.
+      if (await services.health.isAvailable()) {
+        await services.health.enableBackgroundUpdates(() => refresh(false));
+      }
     })().catch((e: unknown) => console.error('App start failed', e));
     const appState = AppState.addEventListener('change', (state) => {
       if (state === 'active') refresh(true).catch((e: unknown) => console.error(e));
@@ -101,7 +105,7 @@ export function AppProvider({ children, db: injectedDb, services: injectedServic
       appState.remove();
       motion.remove();
     };
-  }, [db, refresh]);
+  }, [db, services, refresh]);
 
   // Taps on nudges, including the one that launched the app.
   useEffect(

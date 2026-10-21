@@ -77,12 +77,12 @@ passes; screen reader reads the dog's state.
 
 ## M4 — Steps (real health data)
 
-- [ ] iOS `HealthService`: stepCount permission, 10-minute buckets, observer + hourly
+- [x] iOS `HealthService`: stepCount permission, 10-minute buckets, observer + hourly
       background delivery that records events and asks the nudge planner.
 - [ ] Android `HealthService`: Health Connect `READ_STEPS` (+ optional background read),
       synthetic-package-name-safe aggregation, Recording API fallback for Android ≤ 13.
-- [ ] Walk detection writes `walk_detected` events; leash and play-bow requests go live.
-- [ ] Permission-denied path keeps manual walks working.
+- [x] Walk detection writes `walk_detected` events; leash and play-bow requests go live.
+- [x] Permission-denied path keeps manual walks working.
 - [ ] **[HUMAN]** Verify on devices: totals within 5% of Apple Health / Health Connect; the
       leash request appears on a low-step afternoon and clears after a walk.
 

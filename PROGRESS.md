@@ -71,10 +71,16 @@ with opened tracking and action buttons, `dogyears://home` route. A test runs ev
 through the real pipeline every 30 minutes and proves pushes never exceed the budget.
 **[HUMAN]** confirm delivery, action buttons and deep links on both devices.
 
+**M4 — steps (code) done except the Android ≤ 13 Recording API fallback.** Real
+`HealthService` for iOS (HealthKit) and Android (Health Connect) on physical devices,
+persona mocks in simulators. Config plugins, entitlements and `READ_STEPS` verified with
+`expo config --type introspect`. **[HUMAN]** device check: totals within 5% of Apple Health
+/ Health Connect, leash on a low-step afternoon clears after a walk.
+
 ## Next
 
-1. M4 (steps): HealthKit + Health Connect implementations of `HealthService`; needs the
-   libraries' READMEs and physical devices to finish.
+1. M4 leftovers: Recording API fallback (Android ≤ 13), privacy-policy rationale screen,
+   device verification.
 2. M6/M7: Screen Time (needs the Apple entitlement) and the Android usage-stats module
    (Kotlin), plus the shared nudge ledger mirror for their background producers.
 3. M8 needs the `.riv` file; M9 needs RevenueCat products and keys (human).

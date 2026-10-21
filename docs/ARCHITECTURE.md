@@ -234,6 +234,16 @@ fun getRungsReachedToday(): Int
   June 2026 Health Connect update, on-device steps use a device-specific synthetic package
   name: when filtering by data origin, include both `android` and the current device source,
   or do not filter by origin. For Android 13 and lower use the Recording API on mobile.
+- **As built (M4).** iOS: `@kingstinct/react-native-healthkit` 16.2.0 (Nitro), read-only,
+  `queryStatisticsCollectionForQuantity` with `{ minute: 10 }`, hourly background delivery +
+  `subscribeToChanges` → recompute. HealthKit hides read denials, so `isAvailable()` means
+  "asked, and steps exist in the last 7 days"; otherwise the dog would ask for walks that can
+  never count. Android: `react-native-health-connect` 4.1.3, `READ_STEPS` (declared in
+  `app.config.ts`), `aggregateGroupByDuration` 10 minutes, no origin filter, minSdk 26.
+  The Recording API fallback for Android ≤ 13 is **not built** (no maintained binding).
+  Real health runs on physical devices; simulators use the persona mocks.
+  **[HUMAN]** Health Connect needs a privacy-policy rationale screen (the plugin routes the
+  rationale intent to the main activity) and the Play Console health declaration.
 - Sedentary and walk detection use 10-minute step buckets only (no extra motion permission
   in MVP). Health Connect: aggregate grouped by a 10-minute duration.
 
