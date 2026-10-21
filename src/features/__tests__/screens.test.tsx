@@ -10,6 +10,7 @@ import { useDraft, DEFAULT_DRAFT, isValidName, shiftTime } from '@/features/onbo
 import { WalkScreen } from '@/features/walk/WalkScreen';
 import { ProgressScreen } from '@/features/progress/ProgressScreen';
 import { DataScreen } from '@/features/settings/DataScreen';
+import { SettingsScreen } from '@/features/settings/SettingsScreen';
 import type { MockNotificationService } from '@/services/notifications/mockNotifications';
 import { useDogStore } from '@/store/dogStore';
 
@@ -159,5 +160,21 @@ describe('Progress (PRD F10) and Your data (F13)', () => {
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/welcome'));
     expect(dogRepo.get(db)).toBeNull();
     expect(useDogStore.getState().dog).toBeNull();
+  });
+});
+
+describe('Settings (PRD F13)', () => {
+  it('adds, edits and removes quiet hours', async () => {
+    const { db } = await renderWith(<SettingsScreen />);
+    await fireEvent.press(screen.getByText('Add quiet hours'));
+    await waitFor(() =>
+      expect(prefsRepo.get(db)?.quietHours).toEqual([{ start: '12:00', end: '13:00' }]),
+    );
+    await fireEvent.press(await screen.findByLabelText('Until 30 minutes later'));
+    await waitFor(() =>
+      expect(prefsRepo.get(db)?.quietHours).toEqual([{ start: '12:00', end: '13:30' }]),
+    );
+    await fireEvent.press(screen.getByText('Remove these quiet hours'));
+    await waitFor(() => expect(prefsRepo.get(db)?.quietHours).toEqual([]));
   });
 });

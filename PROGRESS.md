@@ -63,7 +63,6 @@ idempotent), `recompute()` (what the app runs on every foreground) and `deleteAl
   Xcode / Android Studio).
 - **[HUMAN] before launch:** call and confirm every number in
   `src/config/supportResources.ts` (all marked `verifyBeforeLaunch`).
-- Settings quiet hours is a single "quiet at lunch" preset for now (shortcut).
 
 **M5 — notifications (code) done; shared ledger mirror waits for M6/M7.** Real
 `expo-notifications` service in app builds (other services stay mocked), response handling

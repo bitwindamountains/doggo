@@ -11,13 +11,12 @@ import { Stepper } from '@/components/Stepper';
 import { colors } from '@/components/theme';
 import { t } from '@/copy';
 import { prefsRepo, type StoredPrefs } from '@/data';
+import type { QuietHours } from '@/engine';
 import { SOCIAL_GROUP, syncScreenTimeMonitoring } from '@/services/screentime/ScreenTimeService';
 import { shiftTime } from '@/features/onboarding/draft';
 import { useDogStore } from '@/store/dogStore';
 
 import { DevMenu } from './DevMenu';
-
-const LUNCH = { start: '12:00', end: '13:00' };
 
 export function SettingsScreen() {
   const router = useRouter();
@@ -34,7 +33,6 @@ export function SettingsScreen() {
     }
     await refresh(false);
   };
-  const lunchQuiet = prefs.quietHours.some((q) => q.start === LUNCH.start && q.end === LUNCH.end);
   const wake = t('ui.schedule.wake');
   const bed = t('ui.schedule.bed');
   const nudges = t('ui.schedule.nudges');
@@ -71,20 +69,47 @@ export function SettingsScreen() {
         onLess={() => save({ waterGoal: Math.max(1, prefs.waterGoal - 1) })}
         onMore={() => save({ waterGoal: Math.min(16, prefs.waterGoal + 1) })}
       />
-      <View style={styles.row}>
-        <Text style={styles.label}>{t('ui.settings.quietLunch')}</Text>
-        <Switch
-          accessibilityLabel={t('ui.settings.quietLunch')}
-          value={lunchQuiet}
-          onValueChange={(on) =>
-            save({
-              quietHours: on
-                ? [...prefs.quietHours, LUNCH]
-                : prefs.quietHours.filter((q) => !(q.start === LUNCH.start && q.end === LUNCH.end)),
-            })
-          }
-        />
-      </View>
+      <Text accessibilityRole="header" style={styles.heading}>
+        {t('ui.settings.quietHours')}
+      </Text>
+      {prefs.quietHours.map((q, i) => {
+        const set = (patch: Partial<QuietHours>) =>
+          save({ quietHours: prefs.quietHours.map((x, j) => (j === i ? { ...x, ...patch } : x)) });
+        const from = t('ui.settings.quietFrom');
+        const to = t('ui.settings.quietTo');
+        return (
+          <View key={i} style={styles.card}>
+            <Stepper
+              label={from}
+              value={q.start}
+              onLess={() => set({ start: shiftTime(q.start, -30) })}
+              onMore={() => set({ start: shiftTime(q.start, 30) })}
+              lessLabel={t('ui.schedule.earlier', { label: from })}
+              moreLabel={t('ui.schedule.later', { label: from })}
+            />
+            <Stepper
+              label={to}
+              value={q.end}
+              onLess={() => set({ end: shiftTime(q.end, -30) })}
+              onMore={() => set({ end: shiftTime(q.end, 30) })}
+              lessLabel={t('ui.schedule.earlier', { label: to })}
+              moreLabel={t('ui.schedule.later', { label: to })}
+            />
+            <Button
+              kind="secondary"
+              label={t('ui.settings.removeQuiet')}
+              onPress={() => save({ quietHours: prefs.quietHours.filter((_, j) => j !== i) })}
+            />
+          </View>
+        );
+      })}
+      <Button
+        kind="secondary"
+        label={t('ui.settings.addQuiet')}
+        onPress={() =>
+          save({ quietHours: [...prefs.quietHours, { start: '12:00', end: '13:00' }] })
+        }
+      />
       {services.screenTime.isSupported() ? (
         <View style={styles.row}>
           <Text style={styles.label}>{t('ui.settings.screenTime')}</Text>
@@ -138,4 +163,6 @@ const styles = StyleSheet.create({
   },
   label: { fontSize: 16, color: colors.ink, flexShrink: 1, paddingRight: 8 },
   hint: { fontSize: 14, color: colors.inkSoft },
+  heading: { fontSize: 18, fontWeight: '700', color: colors.ink, marginTop: 8 },
+  card: { backgroundColor: colors.card, borderRadius: 16, padding: 12 },
 });
