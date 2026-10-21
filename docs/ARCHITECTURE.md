@@ -201,7 +201,9 @@ whole app runs in a simulator.
   **Not built:** rung 2/3 pushes from the extension. The library's `sendNotification`
   action cannot read the nudge ledger, quiet hours or bedtime, so using it would break the
   budget rule; this needs custom extension code (Xcode). Until then the ball/bored reaction
-  shows when the app is opened. Real Android devices report screen time as unsupported
+  shows when the app is opened. **Decision (2026-10-21, owner):** do not enable the
+  library's push as a stopgap; product rule 4 wins over F6 pushes until the extension can
+  read the shared ledger, quiet hours and bedtime. Real Android devices report screen time as unsupported
   until M7.
 - v1.1 shield: shield buttons can only close/defer; they cannot open the main app. "Walk"
   closes the shielded app and posts a notification that deep-links to `dogyears://walk`.
