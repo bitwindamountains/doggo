@@ -14,18 +14,14 @@ import {
   type RecomputeResult,
 } from '@/data';
 import { t } from '@/copy';
-import { dayKeyAt, dayWindow, type ISO, type NudgeType } from '@/engine';
+import { dayKeyAt, dayWindow, type ISO } from '@/engine';
 import { addDays, toISO } from '@/engine/time';
 import type { Services } from '@/services';
+import { NUDGE_ACTION_COPY } from '@/services/notifications/actions';
 import { useDogStore } from '@/store/dogStore';
 
-const ACTION_KEY: Record<NudgeType, string> = {
-  leash: 'push.action.leash',
-  playBow: 'push.action.playBow',
-  ball: 'push.action.ball',
-  bored: 'push.action.ball',
-  bedtime: 'push.action.bedtime',
-};
+// Steps availability from the last full refresh; taps reuse it instead of asking again.
+let lastStepsAvailable = false;
 
 export interface RefreshContext {
   db: Db;
@@ -36,21 +32,25 @@ export interface RefreshContext {
 
 export async function refreshDog(
   { db, services, now, reduceMotion }: RefreshContext,
-  opts: { opened: boolean },
+  opts: { opened: boolean; pull?: boolean },
 ): Promise<RecomputeResult | null> {
+  // `pull: false` (a tap in the app): recompute from stored data only, without asking
+  // HealthKit / Health Connect / Screen Time again.
+  const pull = opts.pull ?? true;
   const stored = prefsRepo.get(db);
   if (!stored) {
     useDogStore.getState().set({ output: null, dog: null, prefs: null });
     return null;
   }
-  const stepsAvailable = await services.health.isAvailable();
+  const stepsAvailable = pull ? await services.health.isAvailable() : lastStepsAvailable;
+  lastStepsAvailable = stepsAvailable;
   const prefs = enginePrefs(stored, stepsAvailable);
   const nowMs = Date.parse(now);
   const today = dayKeyAt(nowMs, prefs);
 
   // shortcut: only yesterday and today are re-read from health; after a longer absence
   // older days finalize with whatever was cached. Fine until M4 adds a real backfill.
-  if (stepsAvailable) {
+  if (pull && stepsAvailable) {
     for (const day of [addDays(today, -1), today]) {
       const w = dayWindow(day, prefs);
       const end = Math.min(w.end, nowMs);
@@ -62,7 +62,7 @@ export async function refreshDog(
       );
     }
   }
-  if (stored.screenTimeEnabled) {
+  if (pull && stored.screenTimeEnabled) {
     const w = dayWindow(today, prefs);
     const reading = await services.screenTime.getRungsReachedToday(toISO(w.start));
     const known = eventsRepo
@@ -79,15 +79,16 @@ export async function refreshDog(
   const dog = dogRepo.get(db);
   if (result && dog) {
     const plan = result.output.nudgePlan;
-    replaceScheduledNudges(db, now, plan);
-    await services.notifications.replaceSchedule(
+    const scheduled = await services.notifications.replaceSchedule(
       plan.map((n) => ({
         ...n,
         title: dog.name,
         body: t(n.copyKey, { name: dog.name }),
-        action: t(ACTION_KEY[n.type]),
+        action: t(NUDGE_ACTION_COPY[n.type]),
       })),
     );
+    // Only what the OS really scheduled counts toward the ledger later.
+    replaceScheduledNudges(db, now, scheduled);
   }
   const learned = result?.finalized.flatMap((f) => f.unlockedTricks) ?? [];
   const store = useDogStore.getState();

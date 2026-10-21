@@ -12,6 +12,8 @@ import { colors } from '@/components/theme';
 import { t } from '@/copy';
 import { useEntitlement } from '@/services/purchases/useEntitlement';
 
+import { scheduleTrialReminder } from './trialReminder';
+
 // Cancel instructions one tap away (PRD F12): the store's own subscription page.
 const SUBSCRIPTIONS_URL =
   Platform.OS === 'ios'
@@ -20,7 +22,7 @@ const SUBSCRIPTIONS_URL =
 
 export function PaywallScreen() {
   const router = useRouter();
-  const { services } = useApp();
+  const { db, services, now } = useApp();
   const premium = useEntitlement('premium');
   const [bought, setBought] = useState(false);
   const active = premium || bought;
@@ -32,13 +34,19 @@ export function PaywallScreen() {
       ) : (
         <Button
           label={t('ui.paywall.trial')}
-          onPress={async () => setBought(await services.purchases.purchase('annual'))}
+          onPress={async () => {
+            setBought(await services.purchases.purchase('annual'));
+            await scheduleTrialReminder(services, db, now());
+          }}
         />
       )}
       <Button
         kind="secondary"
         label={t('ui.paywall.restore')}
-        onPress={async () => setBought((await services.purchases.restore()).premium)}
+        onPress={async () => {
+          setBought((await services.purchases.restore()).premium);
+          await scheduleTrialReminder(services, db, now());
+        }}
       />
       <Text style={styles.hint}>{t('ui.paywall.cancelInfo')}</Text>
       <Button

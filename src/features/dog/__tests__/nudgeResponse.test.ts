@@ -1,5 +1,5 @@
 import { createTestDb } from '@/data/__tests__/testDb';
-import { eventsRepo, ledgerRepo, type Db } from '@/data';
+import { eventsRepo, ledgerRepo, replaceScheduledNudges, type Db } from '@/data';
 import { PERSONAS } from '@/engine/sim/personas';
 import { applyPersona } from '@/features/settings/applyPersona';
 
@@ -31,6 +31,15 @@ describe('handleNudgeResponse (M5)', () => {
     expect(eventsRepo.lastOfType(db, 'nudge_opened', '2026-10-22T00:00:00.000Z')?.payload).toEqual({
       type: 'leash',
     });
+  });
+
+  it('counts a tap on a push that fired while the app was closed', () => {
+    // Scheduled at the last recompute; fired at 14:30 Manila; no recompute since.
+    replaceScheduledNudges(db, '2026-10-21T05:00:00.000Z', [
+      { type: 'leash', at: '2026-10-21T06:30:00.000Z' },
+    ]);
+    handleNudgeResponse(db, { type: 'leash', action: 'open', deepLink: 'dogyears://walk' }, NOW);
+    expect(ledgerRepo.find(db, '2026-10-21')).toMatchObject({ sentCount: 1, openedCount: 1 });
   });
 
   it('the action button answers the request', () => {

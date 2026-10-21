@@ -46,7 +46,11 @@ export function AdoptScreen() {
           key={b}
           kind={b === breed ? 'primary' : 'secondary'}
           label={t(`ui.breed.${b}`)}
-          accessibilityLabel={`${t(`ui.breed.${b}`)}${b === breed ? ', selected' : ''}`}
+          accessibilityLabel={
+            b === breed
+              ? t('ui.common.selected', { label: t(`ui.breed.${b}`) })
+              : t(`ui.breed.${b}`)
+          }
           onPress={() => update({ breed: b })}
         />
       ))}

@@ -67,6 +67,8 @@ export const en = {
   'ui.common.back': 'Back',
   'ui.common.done': 'Done',
   'ui.common.cancel': 'Cancel',
+  'ui.common.selected': '{label}, selected',
+  'ui.notifications.channel': 'Your dog',
   'ui.welcome.title': 'Meet your new dog',
   'ui.welcome.body': 'A dog that walks, stretches, drinks water and sleeps on your schedule.',
   'ui.welcome.noAccount': 'No account needed. Everything stays on this phone.',

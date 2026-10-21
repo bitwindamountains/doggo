@@ -28,7 +28,8 @@ interface AppContextValue {
   ready: boolean;
   reduceMotion: boolean;
   now(): string;
-  refresh(opened?: boolean): Promise<void>;
+  /** `pull: false` recomputes from stored data only (no platform reads). */
+  refresh(opened?: boolean, pull?: boolean): Promise<void>;
   /** Records a user action now and recomputes. */
   record<T extends EventType>(type: T, payload: EventPayloads[T]): Promise<void>;
 }
@@ -66,19 +67,26 @@ export function AppProvider({ children, db: injectedDb, services: injectedServic
   const reduceMotionRef = useRef(false);
 
   const now = useCallback(() => new Date(nowMs()).toISOString(), []);
+  // One recompute at a time: overlapping runs would interleave the notification
+  // cancel/schedule calls (duplicate pushes) and record the same open twice.
+  const queue = useRef<Promise<unknown>>(Promise.resolve());
   const refresh = useCallback(
-    async (opened = false) => {
-      await refreshDog(
-        { db, services, now: now(), reduceMotion: reduceMotionRef.current },
-        { opened },
+    (opened = false, pull = true): Promise<void> => {
+      const run = queue.current.then(() =>
+        refreshDog(
+          { db, services, now: now(), reduceMotion: reduceMotionRef.current },
+          { opened, pull },
+        ),
       );
+      queue.current = run.catch(() => undefined);
+      return run.then(() => undefined);
     },
     [db, services, now],
   );
   const record = useCallback(
     async <T extends EventType>(type: T, payload: EventPayloads[T]) => {
       eventsRepo.add(db, type, now(), payload);
-      await refresh(false);
+      await refresh(false, false);
     },
     [db, now, refresh],
   );
@@ -100,7 +108,10 @@ export function AppProvider({ children, db: injectedDb, services: injectedServic
       }
     })().catch((e: unknown) => console.error('App start failed', e));
     const appState = AppState.addEventListener('change', (state) => {
-      if (state === 'active') refresh(true).catch((e: unknown) => console.error(e));
+      if (state !== 'active') return;
+      refresh(true)
+        .then(() => scheduleTrialReminder(services, db, now()))
+        .catch((e: unknown) => console.error(e));
     });
     const motion = AccessibilityInfo.addEventListener('reduceMotionChanged', (on) => {
       reduceMotionRef.current = on;
@@ -113,16 +124,17 @@ export function AppProvider({ children, db: injectedDb, services: injectedServic
     };
   }, [db, services, now, refresh]);
 
-  // Taps on nudges, including the one that launched the app.
-  useEffect(
-    () =>
-      services.notifications.onResponse((r) => {
-        const route = handleNudgeResponse(db, r, now());
-        refresh(true).catch((e: unknown) => console.error(e));
-        router.push(route as '/');
-      }),
-    [db, services, now, refresh],
-  );
+  // Taps on nudges, including the one that launched the app. Only once start-up is done:
+  // the database is migrated and the navigator is mounted. The foreground event (or
+  // start-up) records the open; this only applies the tap.
+  useEffect(() => {
+    if (!ready) return;
+    return services.notifications.onResponse((r) => {
+      const route = handleNudgeResponse(db, r, now());
+      refresh(false, false).catch((e: unknown) => console.error(e));
+      router.push(route as '/');
+    });
+  }, [ready, db, services, now, refresh]);
 
   // Dev clock moved: recompute as if time passed. Subscribing (not an effect on `ready`)
   // keeps the start-up recompute's greeting from being overwritten.

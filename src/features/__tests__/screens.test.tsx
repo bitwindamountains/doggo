@@ -59,6 +59,22 @@ describe('Nudge responses (M5)', () => {
     });
     await waitFor(() => expect(router.push).toHaveBeenCalledWith('/walk'));
   });
+
+  it('a tap does not record a second app open', async () => {
+    const { db, services } = await renderWith(<HomeScreen />, { at: '14:30' });
+    const opens = () =>
+      eventsRepo
+        .between(db, '2026-10-01T00:00:00.000Z', '2026-10-22T00:00:00.000Z')
+        .filter((e) => e.type === 'app_opened').length;
+    const before = opens();
+    (services.notifications as MockNotificationService).respond({
+      type: 'leash',
+      action: 'open',
+      deepLink: 'dogyears://walk',
+    });
+    await waitFor(() => expect(router.push).toHaveBeenCalled());
+    expect(opens()).toBe(before);
+  });
 });
 
 describe('Walk (PRD F4)', () => {
@@ -176,5 +192,12 @@ describe('Settings (PRD F13)', () => {
     );
     await fireEvent.press(screen.getByText('Remove these quiet hours'));
     await waitFor(() => expect(prefsRepo.get(db)?.quietHours).toEqual([]));
+  });
+
+  it('two quick taps both count', async () => {
+    const { db } = await renderWith(<SettingsScreen />);
+    const later = screen.getByLabelText('Wake time 30 minutes later');
+    await Promise.all([fireEvent.press(later), fireEvent.press(later)]);
+    await waitFor(() => expect(prefsRepo.get(db)?.wakeTime).toBe('08:00'));
   });
 });

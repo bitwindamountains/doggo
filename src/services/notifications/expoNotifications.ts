@@ -8,19 +8,13 @@ import * as Notifications from 'expo-notifications';
 import { t } from '@/copy';
 import type { NudgeType } from '@/engine';
 
-import type { NotificationService, NudgeResponse } from './NotificationService';
+import { NUDGE_ACTION_COPY } from './actions';
+import type { NotificationService, NudgeResponse, ScheduledNudge } from './NotificationService';
 
 const CHANNEL = 'dog';
 const ACTION = 'dog-action';
 const TRIAL_ID = 'trial-reminder';
 const TYPES: NudgeType[] = ['leash', 'playBow', 'ball', 'bored', 'bedtime'];
-const ACTION_COPY: Record<NudgeType, string> = {
-  leash: 'push.action.leash',
-  playBow: 'push.action.playBow',
-  ball: 'push.action.ball',
-  bored: 'push.action.ball',
-  bedtime: 'push.action.bedtime',
-};
 
 function toResponse(r: Notifications.NotificationResponse): NudgeResponse | null {
   const data = r.notification.request.content.data as { type?: string; deepLink?: string };
@@ -48,7 +42,7 @@ export function createExpoNotifications(toDeviceMs: (ms: number) => number): Not
       // Android 8+: every notification needs a channel; Android 13 shows the permission
       // prompt only once a channel exists.
       await Notifications.setNotificationChannelAsync(CHANNEL, {
-        name: 'Your dog',
+        name: t('ui.notifications.channel'),
         importance: Notifications.AndroidImportance.DEFAULT,
       });
       // One action per notification (PRD §7 rule 3).
@@ -56,23 +50,27 @@ export function createExpoNotifications(toDeviceMs: (ms: number) => number): Not
         await Notifications.setNotificationCategoryAsync(type, [
           {
             identifier: ACTION,
-            buttonTitle: t(ACTION_COPY[type]),
+            buttonTitle: t(NUDGE_ACTION_COPY[type]),
             options: { opensAppToForeground: true },
           },
         ]);
       }
     })());
 
+  const isAllowed = (status: Notifications.NotificationPermissionsStatus) => {
+    const ios = status.ios?.status;
+    return (
+      status.granted ||
+      ios === Notifications.IosAuthorizationStatus.PROVISIONAL ||
+      ios === Notifications.IosAuthorizationStatus.AUTHORIZED
+    );
+  };
+  const allowed = async () => isAllowed(await Notifications.getPermissionsAsync());
+
   return {
     async requestPermissions() {
       await setup();
-      const status = await Notifications.requestPermissionsAsync();
-      const ios = status.ios?.status;
-      return (
-        status.granted ||
-        ios === Notifications.IosAuthorizationStatus.PROVISIONAL ||
-        ios === Notifications.IosAuthorizationStatus.AUTHORIZED
-      );
+      return isAllowed(await Notifications.requestPermissionsAsync());
     },
 
     async replaceSchedule(nudges) {
@@ -83,6 +81,8 @@ export function createExpoNotifications(toDeviceMs: (ms: number) => number): Not
           await Notifications.cancelScheduledNotificationAsync(n.identifier);
         }
       }
+      if (!(await allowed())) return [];
+      const scheduled: ScheduledNudge[] = [];
       for (const n of nudges) {
         const date = toDeviceMs(Date.parse(n.at));
         if (date <= Date.now()) continue;
@@ -99,19 +99,22 @@ export function createExpoNotifications(toDeviceMs: (ms: number) => number): Not
             channelId: CHANNEL,
           },
         });
+        scheduled.push(n);
       }
+      return scheduled;
     },
 
     async setTrialReminder(reminder) {
       await setup();
       await Notifications.cancelScheduledNotificationAsync(TRIAL_ID);
-      if (!reminder || Date.parse(reminder.at) <= Date.now()) return;
+      if (!reminder || toDeviceMs(Date.parse(reminder.at)) <= Date.now() || !(await allowed()))
+        return;
       await Notifications.scheduleNotificationAsync({
         identifier: TRIAL_ID,
         content: { title: reminder.title, body: reminder.body, data: { kind: 'trial' } },
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.DATE,
-          date: Date.parse(reminder.at),
+          date: toDeviceMs(Date.parse(reminder.at)),
           channelId: CHANNEL,
         },
       });

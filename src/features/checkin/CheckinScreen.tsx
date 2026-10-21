@@ -76,7 +76,11 @@ export function CheckinScreen() {
                 key={m}
                 kind={m === mood ? 'primary' : 'secondary'}
                 label={FACES[m]}
-                accessibilityLabel={`${t(`ui.mood.${m}`)}${m === mood ? ', selected' : ''}`}
+                accessibilityLabel={
+                  m === mood
+                    ? t('ui.common.selected', { label: t(`ui.mood.${m}`) })
+                    : t(`ui.mood.${m}`)
+                }
                 onPress={() => setMood(m)}
               />
             ))}

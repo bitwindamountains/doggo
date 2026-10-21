@@ -37,6 +37,18 @@ export function createIosScreenTime(): ScreenTimeService {
     async startDailyMonitoring(groupId, dayStartHHmm) {
       const selection = DeviceActivity.getFamilyActivitySelectionId(groupId);
       if (!selection) return;
+      // Restarting mid-day makes iOS count usage from the restart (thresholds reset), so
+      // only restart when the schedule or the picked apps changed.
+      const name = activityName(groupId);
+      const config = `${dayStartHHmm}|${selection}`;
+      const configKey = `${name}_config`;
+      if (
+        DeviceActivity.getActivities().includes(name) &&
+        DeviceActivity.userDefaultsGet<string>(configKey) === config
+      ) {
+        return;
+      }
+      DeviceActivity.userDefaultsSet(configKey, config);
       await DeviceActivity.startMonitoring(
         activityName(groupId),
         dailySchedule(dayStartHHmm),

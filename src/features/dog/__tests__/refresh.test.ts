@@ -76,6 +76,13 @@ describe('refreshDog with mock services (PRD F4 AC)', () => {
     },
   );
 
+  it('counts nothing as sent when notifications are not allowed', async () => {
+    await setup('desk-worker', '08:00');
+    (services.notifications as MockNotificationService).permitted = false;
+    for (const hhmm of ['10:00', '14:30', '18:00', '22:30']) await at(hhmm, false);
+    expect(ledgerRepo.find(db, '2026-10-21')?.sentCount ?? 0).toBe(0);
+  });
+
   it('returns null and clears the store before onboarding', async () => {
     db = await createTestDb();
     services = createMockServices(

@@ -17,8 +17,12 @@ export interface NudgeResponse {
 
 export interface NotificationService {
   requestPermissions(): Promise<boolean>;
-  /** Cancels everything this app scheduled and schedules `nudges` instead. */
-  replaceSchedule(nudges: ScheduledNudge[]): Promise<void>;
+  /**
+   * Cancels the scheduled nudges and schedules `nudges` instead. Returns the ones the OS
+   * actually scheduled (none without permission, none in the past), so only those count
+   * toward the ledger once their time passes.
+   */
+  replaceSchedule(nudges: ScheduledNudge[]): Promise<ScheduledNudge[]>;
   /**
    * The trial reminder (PRD F12). Separate from the dog's nudges and their budget;
    * `null` cancels it. replaceSchedule() never touches it.
