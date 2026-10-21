@@ -3,7 +3,7 @@
 Read this at the start of each session. The build plan and checkboxes live in
 `docs/MILESTONES.md`; this file is the short status and what to do next.
 
-## Status (2026-10-02)
+## Status (2026-10-21)
 
 **M0 — code tasks done.** Expo SDK 57 (React Native 0.86, React 19.2, TypeScript 6),
 Expo Router with routes in `app/` (placeholder screens), path aliases (`@/engine`, `@/copy`, …),
@@ -33,14 +33,25 @@ DOG_ENGINE.md §3–§11, with `computeDog()` and `finalizeDay()` as entry point
   depend on it. The copy-rules test enforces banned words, push bodies ≤ 60 characters, and
   that the keys match the engine.
 
+**M2 — local data layer done.** `src/data/`: Drizzle schema + first migration
+(`src/data/migrations/`), six repos, `buildEngineInput()`, `finalizePastDays()` (lazy,
+idempotent), `recompute()` (what the app runs on every foreground) and `deleteAllData()`.
+- Tests run the app's real migration bundle on an in-memory `better-sqlite3`
+  (`src/data/__tests__/testDb.ts`); both drivers are synchronous Drizzle SQLite, so repos
+  are plain sync functions. 333 tests pass.
+- Decisions not in the spec are in ARCHITECTURE §5 "As built (M2)": new event types
+  `ball_played` and `play_bow_answered`, the early-fire guard applied in the assembler,
+  walks the app never saw detected at finalization, backfill capped at 60 days.
+- Added `babel.config.js` (inline `.sql` imports) and `metro.config.js` (`sql` source ext)
+  as Drizzle's Expo driver needs. Not yet run in a dev build (`openDb()` in
+  `src/data/openDb.ts` is the only code that touches `expo-sqlite`).
+
 ## Next
 
-1. **M2 — local data layer:** `expo-sqlite` + Drizzle schema (ARCHITECTURE §5), the repos,
-   `buildEngineInput(now)`, lazy idempotent finalization on open, and delete-all. The
-   engine's needs are in DOG_ENGINE §13: summaries must store `pets` and `stepTarget`, and
-   `screenRungAt` must be tracked.
-2. M3 — app shell with mock services (personas from `src/engine/sim/personas.ts` can drive
-   the mocks and the dev menu).
+1. **M3 — app shell with mock services:** service interfaces + mocks (personas from
+   `src/engine/sim/personas.ts` can drive them and the dev menu), then onboarding and the
+   home scene. Call `migrate(openDb())` at startup and `recompute(db, now, runtime,
+   { opened: true })` on `AppState` → active.
 
 ## Notes
 
@@ -48,3 +59,6 @@ DOG_ENGINE.md §3–§11, with `computeDog()` and `finalizeDay()` as entry point
   peer resolution once pulled `react-dom@19.3`; it is pinned to match `react` (19.2.3).
 - SDK 57: the splash screen is configured via the `expo-splash-screen` plugin, not `splash`.
 - Only `*.test.ts(x)` files are tests, so helpers can live in `__tests__/`.
+- Cloud sessions: api.expo.dev and docs sites are blocked by the network policy. Use
+  `EXPO_OFFLINE=1 npx expo install <pkg>` (reads versions from the installed SDK) and read
+  docs from GitHub sources.

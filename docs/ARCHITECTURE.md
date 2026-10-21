@@ -248,6 +248,31 @@ nudge_ledger { day TEXT PK, sentCount INT, lastSentAt, ignoredStreakDays INT }
 
 Mood values and notes live only in `event` locally. Delete-all clears every table.
 
+**As built (M2).** The schema is `src/data/schema.ts`; migrations live in
+`src/data/migrations/` (`npx drizzle-kit generate` after a schema change). Columns are
+snake_case in SQL. Additions to the sketch above:
+
+- `dog.adoptedAsSenior`; `prefs.weekendWakeTime`, `prefs.weekendBedTime` (DOG_ENGINE §2).
+  `stepsAvailable` is not stored: it is runtime state from `HealthService`.
+- `day_summary.pets` and `day_summary.stepTarget` (DOG_ENGINE §13); `moodCheckin` is
+  `moodMin IS NOT NULL`.
+- `nudge_ledger.sentTypes` (JSON) and `openedCount`. An open counts only within 60 minutes
+  of the last push.
+- Event types `ball_played {rung}` (user tapped "Play": acknowledges the rung) and
+  `play_bow_answered` (user tapped "Stretch"). Payloads are typed in `src/data/events.ts`.
+  `walk_detected` events are stored at the walk's end; `walk_ended {start, steps}` is a
+  manual walk ending at the event's time.
+- Days are found by time range (`dayWindow`), not stored on events, so events stay valid
+  if the user's wake time changes.
+
+`buildEngineInput(db, now, runtime)` is the only bridge to the engine. It applies the
+early-fire guard to `screen_rung` events and uses the latest mood check-in of the day as
+`moodToday` (the summary keeps the lowest as `moodMin`). `recompute()` runs on every
+foreground: it finalizes past days, computes, stores newly detected walks and records the
+`app_opened` event after computing, so the greeting sees the previous open.
+`finalizePastDays()` is idempotent, commits each day in one transaction, detects walks the
+app never saw from that day's step buckets, and backfills at most 60 days.
+
 ## 6. Server data model (Supabase, later milestone)
 
 Only aggregates sync. No app identifiers, raw steps, location or mood notes.

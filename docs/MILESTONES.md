@@ -50,11 +50,11 @@ imports nothing from React/Expo/data/services.
 
 ## M2 — Local data layer
 
-- [ ] `expo-sqlite` + Drizzle schema and first migration (ARCHITECTURE §5).
-- [ ] Repos: `dogRepo`, `prefsRepo`, `eventsRepo`, `dayRepo`, `ledgerRepo`, `stepCacheRepo`.
-- [ ] `buildEngineInput(now)`: the only bridge from stored data to the engine.
-- [ ] Lazy finalization of past days on app open (idempotent; test running it twice).
-- [ ] "Delete all data" clears every table and resets onboarding.
+- [x] `expo-sqlite` + Drizzle schema and first migration (ARCHITECTURE §5).
+- [x] Repos: `dogRepo`, `prefsRepo`, `eventsRepo`, `dayRepo`, `ledgerRepo`, `stepCacheRepo`.
+- [x] `buildEngineInput(now)`: the only bridge from stored data to the engine.
+- [x] Lazy finalization of past days on app open (idempotent; test running it twice).
+- [x] "Delete all data" clears every table and resets onboarding.
 
 **DoD:** repo and assembler tests pass; finalization idempotency test passes.
 
