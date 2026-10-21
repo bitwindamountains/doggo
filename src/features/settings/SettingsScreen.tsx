@@ -1,0 +1,136 @@
+// Settings (PRD F13): schedule, nudges, water goal, quiet hours, screen time, permissions,
+// "Your data", Premium. Every change recomputes the dog.
+
+import { useRouter } from 'expo-router';
+import { StyleSheet, Switch, Text, View } from 'react-native';
+
+import { useApp } from '@/components/AppProvider';
+import { Button } from '@/components/Button';
+import { Screen } from '@/components/Screen';
+import { Stepper } from '@/components/Stepper';
+import { colors } from '@/components/theme';
+import { t } from '@/copy';
+import { prefsRepo, type StoredPrefs } from '@/data';
+import { shiftTime } from '@/features/onboarding/draft';
+import { useDogStore } from '@/store/dogStore';
+
+import { DevMenu } from './DevMenu';
+
+const LUNCH = { start: '12:00', end: '13:00' };
+
+export function SettingsScreen() {
+  const router = useRouter();
+  const { db, services, refresh } = useApp();
+  const prefs = useDogStore((s) => s.prefs);
+  const name = useDogStore((s) => s.dog?.name ?? '');
+  if (!prefs) return <Screen>{null}</Screen>;
+
+  const save = async (patch: Partial<StoredPrefs>) => {
+    prefsRepo.save(db, { ...prefs, ...patch });
+    await refresh(false);
+  };
+  const lunchQuiet = prefs.quietHours.some((q) => q.start === LUNCH.start && q.end === LUNCH.end);
+  const wake = t('ui.schedule.wake');
+  const bed = t('ui.schedule.bed');
+  const nudges = t('ui.schedule.nudges');
+  const water = t('ui.settings.waterGoal');
+
+  return (
+    <Screen title={t('ui.settings.title')}>
+      <Stepper
+        label={wake}
+        value={prefs.wakeTime}
+        onLess={() => save({ wakeTime: shiftTime(prefs.wakeTime, -30) })}
+        onMore={() => save({ wakeTime: shiftTime(prefs.wakeTime, 30) })}
+        lessLabel={t('ui.schedule.earlier', { label: wake })}
+        moreLabel={t('ui.schedule.later', { label: wake })}
+      />
+      <Stepper
+        label={bed}
+        value={prefs.bedTime}
+        onLess={() => save({ bedTime: shiftTime(prefs.bedTime, -30) })}
+        onMore={() => save({ bedTime: shiftTime(prefs.bedTime, 30) })}
+        lessLabel={t('ui.schedule.earlier', { label: bed })}
+        moreLabel={t('ui.schedule.later', { label: bed })}
+      />
+      <Stepper
+        label={nudges}
+        value={String(prefs.nudgesPerDay)}
+        onLess={() => save({ nudgesPerDay: Math.max(0, prefs.nudgesPerDay - 1) as 0 | 1 | 2 | 3 })}
+        onMore={() => save({ nudgesPerDay: Math.min(3, prefs.nudgesPerDay + 1) as 0 | 1 | 2 | 3 })}
+      />
+      <Text style={styles.hint}>{t('ui.schedule.nudgesHint', { name })}</Text>
+      <Stepper
+        label={water}
+        value={String(prefs.waterGoal)}
+        onLess={() => save({ waterGoal: Math.max(1, prefs.waterGoal - 1) })}
+        onMore={() => save({ waterGoal: Math.min(16, prefs.waterGoal + 1) })}
+      />
+      <View style={styles.row}>
+        <Text style={styles.label}>{t('ui.settings.quietLunch')}</Text>
+        <Switch
+          accessibilityLabel={t('ui.settings.quietLunch')}
+          value={lunchQuiet}
+          onValueChange={(on) =>
+            save({
+              quietHours: on
+                ? [...prefs.quietHours, LUNCH]
+                : prefs.quietHours.filter((q) => !(q.start === LUNCH.start && q.end === LUNCH.end)),
+            })
+          }
+        />
+      </View>
+      {services.screenTime.isSupported() ? (
+        <View style={styles.row}>
+          <Text style={styles.label}>{t('ui.settings.screenTime')}</Text>
+          <Switch
+            accessibilityLabel={t('ui.settings.screenTime')}
+            value={prefs.screenTimeEnabled}
+            onValueChange={async (on) => {
+              const ok =
+                !on ||
+                ((await services.screenTime.requestAuthorization()) &&
+                  (await services.screenTime.presentAppPicker('social')).count > 0);
+              await save({ screenTimeEnabled: on && ok });
+            }}
+          />
+        </View>
+      ) : null}
+      <Button
+        kind="secondary"
+        label={t('ui.perm.steps.title')}
+        onPress={async () => {
+          await services.health.requestPermissions();
+          await refresh(false);
+        }}
+      />
+      <Button
+        kind="secondary"
+        label={t('ui.perm.notifications.title')}
+        onPress={() => services.notifications.requestPermissions()}
+      />
+      <Button
+        kind="secondary"
+        label={t('ui.settings.yourData')}
+        onPress={() => router.push('/data')}
+      />
+      <Button
+        kind="secondary"
+        label={t('ui.settings.premium')}
+        onPress={() => router.push('/paywall')}
+      />
+      {__DEV__ ? <DevMenu /> : null}
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 6,
+  },
+  label: { fontSize: 16, color: colors.ink, flexShrink: 1, paddingRight: 8 },
+  hint: { fontSize: 14, color: colors.inkSoft },
+});

@@ -1,0 +1,22 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Greetings (PRD F3): none / small / big big greeting 1`] = `
+{
+  "level": "big",
+  "line": "You're back!",
+}
+`;
+
+exports[`Greetings (PRD F3): none / small / big none greeting 1`] = `
+{
+  "level": "none",
+  "line": "Biscuit has the zoomies!",
+}
+`;
+
+exports[`Greetings (PRD F3): none / small / big small greeting 1`] = `
+{
+  "level": "small",
+  "line": "Biscuit trotted over to say hi.",
+}
+`;

@@ -13,6 +13,7 @@ export interface EventPayloads {
   screen_rung: { rung: ScreenRung; firedAt: ISO }; // as read from the extension / worker
   ball_played: { rung: ScreenRung }; // user tapped "Play": acknowledges the rung (§6.3)
   play_bow_answered: null; // user tapped "Stretch with {name}" (§6.2)
+  nudge_scheduled: { type: NudgeType }; // future-dated; becomes nudge_sent once its time passes
   nudge_sent: { type: NudgeType };
   nudge_opened: { type?: NudgeType };
   app_opened: null;

@@ -60,17 +60,17 @@ imports nothing from React/Expo/data/services.
 
 ## M3 — App shell and UI (placeholder dog, mock services)
 
-- [ ] Service interfaces + mock implementations (Health, ScreenTime, Notifications,
+- [x] Service interfaces + mock implementations (Health, ScreenTime, Notifications,
       Purchases). Dev menu to switch personas and fast-forward time in development builds.
-- [ ] Onboarding (PRD F1) with permission primer screens.
-- [ ] Home scene (F2): `PlaceholderDog` implementing `RenderProps`, room lighting by time,
+- [x] Onboarding (PRD F1) with permission primer screens.
+- [x] Home scene (F2): `PlaceholderDog` implementing `RenderProps`, room lighting by time,
       bowl, quick actions (Start walk, Log water, Pet, How are you?).
-- [ ] Recompute on `AppState` → active; greetings (F3); trigger animations from output diffs.
-- [ ] Walk screen (manual walk), mood check-in with 1-minute breathing (F9), Support screen
+- [x] Recompute on `AppState` → active; greetings (F3); trigger animations from output diffs.
+- [x] Walk screen (manual walk), mood check-in with 1-minute breathing (F9), Support screen
       with remote-config resource list (numbers marked "verify before launch").
-- [ ] Progress (F10) with no streak counters; Settings (F13); "Your data" screen.
+- [x] Progress (F10) with no streak counters; Settings (F13); "Your data" screen.
 - [x] `src/copy/en.ts` with all keys from DOG_ENGINE §10 and the copy-rules test (PRD §7).
-- [ ] Accessibility labels for every dog state; reduce-motion support.
+- [x] Accessibility labels for every dog state; reduce-motion support.
 
 **DoD:** the whole app is usable in simulators with mock data for every persona; copy test
 passes; screen reader reads the dog's state.

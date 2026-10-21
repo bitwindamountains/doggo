@@ -1,5 +1,1 @@
-import { PlaceholderScreen } from '@/components/PlaceholderScreen';
-
-export default function WelcomeScreen() {
-  return <PlaceholderScreen title="Welcome" note="Adoption starts here (M3)." />;
-}
+export { WelcomeScreen as default } from '@/features/onboarding/screens';

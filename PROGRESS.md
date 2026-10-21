@@ -46,12 +46,32 @@ idempotent), `recompute()` (what the app runs on every foreground) and `deleteAl
   as Drizzle's Expo driver needs. Not yet run in a dev build (`openDb()` in
   `src/data/openDb.ts` is the only code that touches `expo-sqlite`).
 
+**M3 — app shell done (code).** Every screen is built on mock services:
+- `src/services/*`: Health, ScreenTime, Notifications, Purchases interfaces + mocks driven
+  by the engine personas; `useEntitlement('premium')` is the only Premium check.
+- `src/components/AppProvider.tsx` opens + migrates the DB, recomputes on `AppState` →
+  active and when the dev clock moves; `src/features/dog/refresh.ts` is the pipeline.
+- Screens: onboarding (welcome, adopt, name, schedule, permission primers), Home
+  (`PlaceholderDog` with RenderProps, room light by local time, bowl, request action,
+  4 quick actions, goodnight after bedtime, greeting/pet/celebrate bounces, back-off
+  question), Walk (manual, resumes after app kill), Check-in + 1-minute breathing,
+  Support (`src/config/supportResources.ts`), Progress (no streaks), Settings, Your data
+  (delete all), Paywall (mock), dev menu (persona + clock).
+- 470 tests pass, including screen tests for PRD F1–F4, F8–F10, F13 acceptance criteria.
+  `expo export` bundles both platforms. **Not verified on a simulator/device**: the DoD
+  "usable in simulators for every persona" needs a dev build (human, or a machine with
+  Xcode / Android Studio).
+- **[HUMAN] before launch:** call and confirm every number in
+  `src/config/supportResources.ts` (all marked `verifyBeforeLaunch`).
+- Settings quiet hours is a single "quiet at lunch" preset for now (shortcut).
+
 ## Next
 
-1. **M3 — app shell with mock services:** service interfaces + mocks (personas from
-   `src/engine/sim/personas.ts` can drive them and the dev menu), then onboarding and the
-   home scene. Call `migrate(openDb())` at startup and `recompute(db, now, runtime,
-   { opened: true })` on `AppState` → active.
+1. M4 (steps) needs HealthKit / Health Connect libraries and physical devices.
+2. M5 notifications: `expo-notifications` implementation of `NotificationService`, deep
+   links, opened-notification tracking.
+3. Run a dev build (`npx expo run:android` / `run:ios`) and walk through every persona via
+   Settings → Developer.
 
 ## Notes
 
@@ -59,6 +79,8 @@ idempotent), `recompute()` (what the app runs on every foreground) and `deleteAl
   peer resolution once pulled `react-dom@19.3`; it is pinned to match `react` (19.2.3).
 - SDK 57: the splash screen is configured via the `expo-splash-screen` plugin, not `splash`.
 - Only `*.test.ts(x)` files are tests, so helpers can live in `__tests__/`.
+- RNTL 14: `render`, `fireEvent.*` are async; always `await` them (an un-awaited press
+  leaves an act() scope open and later tests stop re-rendering).
 - Cloud sessions: api.expo.dev and docs sites are blocked by the network policy. Use
   `EXPO_OFFLINE=1 npx expo install <pkg>` (reads versions from the installed SDK) and read
   docs from GitHub sources.

@@ -134,9 +134,31 @@ export interface ScreenTimeService {
   presentAppPicker(groupId: string): Promise<{ count: number }>; // never returns app names to JS on iOS
   startDailyMonitoring(groupId: string, dayStartHHmm: string): Promise<void>;
   stopMonitoring(groupId: string): Promise<void>;
-  getRungsReachedToday(dayStartISO: string): Promise<ScreenRung>; // read from shared storage
+  // As built (M3): returns the rung with its fire time, so the early-fire guard can run.
+  getRungsReachedToday(dayStartISO: string): Promise<{ rung: ScreenRung; firedAt: string } | null>;
+}
+
+// src/services/notifications/NotificationService.ts (as built, M3)
+export interface NotificationService {
+  requestPermissions(): Promise<boolean>;
+  replaceSchedule(nudges: ScheduledNudge[]): Promise<void>; // cancel all, schedule these
+}
+
+// src/services/purchases/PurchaseService.ts (as built, M3); checked only via useEntitlement()
+export interface PurchaseService {
+  getEntitlements(): Promise<{ premium: boolean }>;
+  purchase(productId: 'monthly' | 'annual'): Promise<boolean>;
+  restore(): Promise<{ premium: boolean }>;
 }
 ```
+
+`src/services/index.ts` builds the service set. Until M4–M9 every build uses the mocks,
+driven by the dev persona and dev clock (`src/store/dev.ts`, Settings → Developer in
+`__DEV__` builds). `src/features/dog/refresh.ts` is the foreground pipeline: read steps
+(yesterday + today) and the screen-time rung into SQLite, count scheduled nudges whose time
+has passed as sent (`nudge_scheduled` → `nudge_sent` events, so the ledger stays right
+even though local notifications fire while the app is closed), `recompute()`, then
+replace the notification schedule with the engine's plan.
 
 Each has `ios`, `android` and `mock` implementations. The mock reads persona data so the
 whole app runs in a simulator.

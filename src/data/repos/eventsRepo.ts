@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, lt } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, gte, lt, lte } from 'drizzle-orm';
 
 import type { ISO } from '@/engine';
 
@@ -50,6 +50,28 @@ export const eventsRepo = {
       .limit(1)
       .get();
     return row ? (toEvent(row) as StoredEvent<T>) : null;
+  },
+
+  /** Events of a type with at ≤ `until`, oldest first. */
+  ofTypeUntil<T extends EventType>(db: Db, type: T, until: ISO): StoredEvent<T>[] {
+    return db
+      .select()
+      .from(event)
+      .where(and(eq(event.type, type), lte(event.at, canonical(until))))
+      .orderBy(asc(event.at), asc(event.id))
+      .all()
+      .map((r) => toEvent(r) as StoredEvent<T>);
+  },
+
+  setType(db: Db, id: number, type: EventType): void {
+    db.update(event).set({ type }).where(eq(event.id, id)).run();
+  },
+
+  /** Deletes events of a type with at > `after`. */
+  deleteTypeAfter(db: Db, type: EventType, after: ISO): void {
+    db.delete(event)
+      .where(and(eq(event.type, type), gt(event.at, canonical(after))))
+      .run();
   },
 
   /** The earliest event time, if any (lower bound for finalization). */

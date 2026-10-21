@@ -7,3 +7,4 @@ export { buildEngineInput, enginePrefs, type RuntimeState } from './buildEngineI
 export { finalizePastDays, MAX_BACKFILL_DAYS, type FinalizedDay } from './finalizePastDays';
 export { recompute, type RecomputeResult } from './recompute';
 export { deleteAllData } from './deleteAll';
+export { commitDeliveredNudges, replaceScheduledNudges } from './nudgeSchedule';
