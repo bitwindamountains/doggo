@@ -12,6 +12,7 @@ import { Stepper } from '@/components/Stepper';
 import { colors } from '@/components/theme';
 import { t } from '@/copy';
 import type { Breed } from '@/engine';
+import { SOCIAL_GROUP, syncScreenTimeMonitoring } from '@/services/screentime/ScreenTimeService';
 
 import {
   NAME_MAX,
@@ -149,6 +150,7 @@ export function PermissionsScreen() {
 
   const finish = async () => {
     completeOnboarding(db, draft, now(), deviceTimezone());
+    await syncScreenTimeMonitoring(services.screenTime, draft);
     await refresh(true);
     router.replace('/');
   };
@@ -179,7 +181,7 @@ export function PermissionsScreen() {
           onAllow={async () => {
             const ok =
               (await services.screenTime.requestAuthorization()) &&
-              (await services.screenTime.presentAppPicker('social')).count > 0;
+              (await services.screenTime.presentAppPicker(SOCIAL_GROUP)).count > 0;
             draft.update({ screenTimeEnabled: ok });
             setScreen(ok ? 'yes' : 'no');
           }}

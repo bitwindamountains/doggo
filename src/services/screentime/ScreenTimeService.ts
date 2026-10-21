@@ -3,6 +3,9 @@
 
 import type { ISO, ScreenRung } from '@/engine';
 
+/** Free tier: one watched group (PRD F6). */
+export const SOCIAL_GROUP = 'social';
+
 export type ScreenTimeAuth = 'authorized' | 'denied' | 'notDetermined';
 
 export interface RungReading {
@@ -20,4 +23,14 @@ export interface ScreenTimeService {
   stopMonitoring(groupId: string): Promise<void>;
   /** Highest rung reached since the day start, read from shared storage. */
   getRungsReachedToday(dayStartISO: ISO): Promise<RungReading | null>;
+}
+
+/** Starts (or restarts, after a wake-time change) daily monitoring, or stops it. */
+export async function syncScreenTimeMonitoring(
+  service: ScreenTimeService,
+  prefs: { screenTimeEnabled: boolean; wakeTime: string } | null,
+): Promise<void> {
+  if (!service.isSupported()) return;
+  if (prefs?.screenTimeEnabled) await service.startDailyMonitoring(SOCIAL_GROUP, prefs.wakeTime);
+  else await service.stopMonitoring(SOCIAL_GROUP);
 }

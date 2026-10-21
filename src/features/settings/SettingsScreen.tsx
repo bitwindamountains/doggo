@@ -11,6 +11,7 @@ import { Stepper } from '@/components/Stepper';
 import { colors } from '@/components/theme';
 import { t } from '@/copy';
 import { prefsRepo, type StoredPrefs } from '@/data';
+import { SOCIAL_GROUP, syncScreenTimeMonitoring } from '@/services/screentime/ScreenTimeService';
 import { shiftTime } from '@/features/onboarding/draft';
 import { useDogStore } from '@/store/dogStore';
 
@@ -26,7 +27,11 @@ export function SettingsScreen() {
   if (!prefs) return <Screen>{null}</Screen>;
 
   const save = async (patch: Partial<StoredPrefs>) => {
-    prefsRepo.save(db, { ...prefs, ...patch });
+    const next = { ...prefs, ...patch };
+    prefsRepo.save(db, next);
+    if ('screenTimeEnabled' in patch || 'wakeTime' in patch) {
+      await syncScreenTimeMonitoring(services.screenTime, next);
+    }
     await refresh(false);
   };
   const lunchQuiet = prefs.quietHours.some((q) => q.start === LUNCH.start && q.end === LUNCH.end);
@@ -90,7 +95,7 @@ export function SettingsScreen() {
               const ok =
                 !on ||
                 ((await services.screenTime.requestAuthorization()) &&
-                  (await services.screenTime.presentAppPicker('social')).count > 0);
+                  (await services.screenTime.presentAppPicker(SOCIAL_GROUP)).count > 0);
               await save({ screenTimeEnabled: on && ok });
             }}
           />

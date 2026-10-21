@@ -13,6 +13,7 @@ const env = {
 
 // Placeholder until the name is final; keep in sync with docs/ARCHITECTURE.md §8.
 const BUNDLE_ID = 'app.dogyears';
+const APP_GROUP = 'group.app.dogyears.shared';
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
@@ -61,8 +62,21 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     'react-native-health-connect',
-    // Health Connect needs Android 8.0+ (minSdk 26).
-    ['expo-build-properties', { android: { minSdkVersion: 26 } }],
+    // Health Connect needs Android 8.0+ (minSdk 26); Expo SDK 57 needs iOS 16.4+.
+    [
+      'expo-build-properties',
+      { android: { minSdkVersion: 26 }, ios: { deploymentTarget: '16.4' } },
+    ],
+    // Screen Time extensions need the Apple team and App Group (ARCHITECTURE §4.2); the
+    // plugin is only added once APPLE_TEAM_ID is set, so prebuild works before that.
+    ...(env.APPLE_TEAM_ID
+      ? [
+          [
+            'react-native-device-activity',
+            { appleTeamId: env.APPLE_TEAM_ID, appGroup: APP_GROUP },
+          ] as [string, Record<string, string>],
+        ]
+      : []),
     [
       'expo-splash-screen',
       { image: './assets/images/splash-icon.png', imageWidth: 200, backgroundColor: '#FFF7EC' },

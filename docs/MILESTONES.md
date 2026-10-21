@@ -101,12 +101,12 @@ and actions on both devices.
 
 ## M6 — iOS Screen Time
 
-- [ ] Add `react-native-device-activity` + config plugin (ARCHITECTURE §4.2), iOS 16 target.
-- [ ] Authorization flow and Apple app picker for group `social` (free tier: 1 group).
-- [ ] Daily schedule from the user's day start; events at 45/60/120 minutes.
+- [x] Add `react-native-device-activity` + config plugin (ARCHITECTURE §4.2), iOS 16 target.
+- [x] Authorization flow and Apple app picker for group `social` (free tier: 1 group).
+- [x] Daily schedule from the user's day start; events at 45/60/120 minutes.
 - [ ] Extension writes `{rung, firedAt}` to App Group storage and posts rung 2/3
       notifications only if the shared ledger allows.
-- [ ] Main app reads rungs on foreground with the early-fire guard; ball/bored requests live.
+- [x] Main app reads rungs on foreground with the early-fire guard; ball/bored requests live.
 - [ ] **[HUMAN]** Device test: 60 minutes in a watched app triggers the ball notification;
       unwatched apps never trigger anything.
 

@@ -22,7 +22,8 @@ export interface Services {
  * Services for the running app. Notifications are always real (local notifications work
  * in simulators). Steps are real on a physical device and persona mocks in simulators,
  * where HealthKit / Health Connect have no real data (CLAUDE.md engineering rule 8).
- * Screen time and purchases stay mocked until M6/M7 and M9. `toDeviceMs` maps the dev
+ * Screen time is real on iPhones (M6), off on Android devices until M7. Purchases stay
+ * mocked until M9. `toDeviceMs` maps the dev
  * clock back to real time for the notification scheduler.
  */
 export function createAppServices(
@@ -43,9 +44,18 @@ export function createAppServices(
       : (
           require('./health/androidHealth') as typeof import('./health/androidHealth')
         ).createAndroidHealth();
+  const realScreenTime = (): ScreenTimeService =>
+    Platform.OS === 'ios'
+      ? (
+          require('./screentime/iosScreenTime') as typeof import('./screentime/iosScreenTime')
+        ).createIosScreenTime()
+      : (
+          require('./screentime/unsupportedScreenTime') as typeof import('./screentime/unsupportedScreenTime')
+        ).createUnsupportedScreenTime();
   /* eslint-enable @typescript-eslint/no-require-imports */
   const mocks = createMockServices(getPersona, nowMs);
-  return { ...mocks, notifications, health: isDevice ? realHealth() : mocks.health };
+  if (!isDevice) return { ...mocks, notifications };
+  return { ...mocks, notifications, health: realHealth(), screenTime: realScreenTime() };
 }
 
 export function createMockServices(getPersona: () => Persona, nowMs: () => number): Services {

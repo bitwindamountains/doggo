@@ -172,7 +172,7 @@ whole app runs in a simulator.
 - Configure in `app.config.ts`:
   ```ts
   plugins: [
-    ['expo-build-properties', { ios: { deploymentTarget: '16.0' } }],
+    ['expo-build-properties', { ios: { deploymentTarget: '16.4' } }], // SDK 57 minimum (was 16.0)
     ['react-native-device-activity', { appleTeamId: process.env.APPLE_TEAM_ID, appGroup: 'group.app.dogyears.shared' }],
   ]
   ```
@@ -189,6 +189,20 @@ whole app runs in a simulator.
 - **Early-fire guard:** developers report thresholds firing too early on iOS 26.x. When the
   main app reads a rung, ignore it if `firedAt - dayStart < thresholdMinutes`. Log ignored
   events for diagnostics.
+- **As built (M6).** `react-native-device-activity` 0.6.1 (pinned). The plugin is added only
+  when `APPLE_TEAM_ID` is set (prebuild works without it). Deployment target is **16.4**
+  (the Expo SDK 57 minimum, not 16.0). Picker: `/pick-apps` modal with the persisted sheet
+  view (`familyActivitySelectionId = 'social'`); `presentAppPicker()` resolves with the
+  picked count. Monitoring: activity `dogyears_social`, wake time → wake time − 1 min,
+  events `rung1/2/3`; restarted when the wake time or the toggle changes. On open the app
+  reads `getEvents()` (fired thresholds, kept in the App Group by the extension), takes the
+  highest rung since day start and stores it as a `screen_rung` event; the early-fire guard
+  runs in `buildEngineInput`.
+  **Not built:** rung 2/3 pushes from the extension. The library's `sendNotification`
+  action cannot read the nudge ledger, quiet hours or bedtime, so using it would break the
+  budget rule; this needs custom extension code (Xcode). Until then the ball/bored reaction
+  shows when the app is opened. Real Android devices report screen time as unsupported
+  until M7.
 - v1.1 shield: shield buttons can only close/defer; they cannot open the main app. "Walk"
   closes the shielded app and posts a notification that deep-links to `dogyears://walk`.
 

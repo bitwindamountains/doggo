@@ -81,16 +81,21 @@ persona mocks in simulators. Config plugins, entitlements and `READ_STEPS` verif
 `docs/release/STORE_PRIVACY_ANSWERS.md` (App Store label, Play Data safety, Health Connect
 declaration notes). **[HUMAN]** review, fill placeholders, publish the policy URL.
 
-**Not buildable in the cloud session:** M6 (Screen Time needs the Family Controls
-entitlement + Xcode) and M7 (Kotlin module; no Android SDK here: dl.google.com is blocked).
-Build them on a machine with Xcode / Android Studio.
+**M6 — iOS Screen Time (JS side) done.** Authorization, Apple picker, daily monitoring with
+45/60/120-minute events, rungs read on open (see ARCHITECTURE §4.2 "As built"). Open: rung
+pushes from the extension (custom Swift reading the shared ledger) and the **[HUMAN]** device
+test. Set `APPLE_TEAM_ID` to enable the plugin; Family Controls works in local dev builds,
+TestFlight needs Apple's Distribution approval.
+
+**Not buildable in the cloud session:** M7 (Kotlin module; no Android SDK here:
+dl.google.com is blocked). Build it on a machine with Android Studio.
 
 ## Next
 
 1. M4 leftovers: Recording API fallback (Android ≤ 13), privacy-policy rationale screen,
    device verification.
-2. M6/M7: Screen Time (needs the Apple entitlement) and the Android usage-stats module
-   (Kotlin), plus the shared nudge ledger mirror for their background producers.
+2. M6 extension pushes + M7 Android usage-stats module (Kotlin), plus the shared nudge
+   ledger mirror their background producers read.
 3. M8 needs the `.riv` file; M9 needs RevenueCat products and keys (human).
 4. M10: Screen Time usage strings arrive with M6; crash reporting is optional.
 

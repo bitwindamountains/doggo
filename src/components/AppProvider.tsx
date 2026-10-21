@@ -17,6 +17,8 @@ import { eventsRepo, migrate, type Db, type EventPayloads, type EventType } from
 import { refreshDog } from '@/features/dog/refresh';
 import { handleNudgeResponse } from '@/features/dog/nudgeResponse';
 import { createAppServices, type Services } from '@/services';
+import { syncScreenTimeMonitoring } from '@/services/screentime/ScreenTimeService';
+import { useDogStore } from '@/store/dogStore';
 import { currentPersona, nowMs, useDevStore } from '@/store/dev';
 
 interface AppContextValue {
@@ -88,6 +90,8 @@ export function AppProvider({ children, db: injectedDb, services: injectedServic
       setReduceMotion(reduceMotionRef.current);
       await refresh(true);
       if (alive) setReady(true);
+      // shortcut: monitoring uses the weekday wake time even on weekend schedules.
+      await syncScreenTimeMonitoring(services.screenTime, useDogStore.getState().prefs);
       // HealthKit background delivery wakes the app; recompute and reschedule then.
       if (await services.health.isAvailable()) {
         await services.health.enableBackgroundUpdates(() => refresh(false));
